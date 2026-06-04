@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Manrope } from 'next/font/google';
 import './globals.css';
+import PasswordGate from '@/components/PasswordGate';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${inter.variable} ${manrope.variable} h-full`}>
-      <body className="h-full bg-black text-[#FAFAFA]">{children}</body>
+      <body className="h-full bg-black text-[#FAFAFA]">
+        <PasswordGate>{children}</PasswordGate>
+      </body>
     </html>
   );
 }
