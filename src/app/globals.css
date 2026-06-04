@@ -1,26 +1,217 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-manrope);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: #000;
+  color: #FAFAFA;
+  font-family: var(--font-inter, 'Inter', sans-serif);
+  -webkit-font-smoothing: antialiased;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+/* Table horizontal scrollbar — hidden until hover */
+.table-scroll { scrollbar-width: none; }
+.table-scroll::-webkit-scrollbar { height: 0 !important; width: 0 !important; }
+.table-scroll:hover { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+.table-scroll:hover::-webkit-scrollbar { height: 4px !important; }
+.table-scroll:hover::-webkit-scrollbar-track { background: transparent; }
+.table-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+/* ── Stat card hover ── */
+.stat-card .stat-body {
+  transition: opacity 180ms ease;
+}
+.stat-card:hover .stat-body {
+  opacity: 0;
+  pointer-events: none;
+}
+.stat-card .chart-panel {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 200ms cubic-bezier(0.34,1.28,0.64,1);
+}
+.stat-card:hover .chart-panel {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* ── Table row hover ── */
+.t-row { transition: background 80ms ease; cursor: default; }
+.t-row:hover { background: rgba(255,255,255,0.04) !important; }
+
+/* ── Sidebar nav item hover ── */
+.nav-item { transition: background 100ms ease, color 100ms ease; }
+.nav-item:hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.8) !important; }
+
+/* ── Chart animations ── */
+
+/* Area chart line draw */
+/* Line draws from left to right via stroke-dashoffset */
+@keyframes draw-path {
+  from { stroke-dashoffset: 800; }
+  to   { stroke-dashoffset: 0;   }
+}
+.anim-line {
+  stroke-dasharray: 800;
+  opacity: 0;
+  animation: draw-path 900ms cubic-bezier(0.4,0,0.2,1) forwards;
+  animation-delay: 80ms;
+  animation-fill-mode: both;
+}
+@keyframes line-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.anim-line { animation: draw-path 900ms cubic-bezier(0.25,1,0.5,1) 60ms both, line-fade 200ms ease 60ms both; }
+
+/* Dot: scale from centre using transform-box */
+@keyframes dot-pop {
+  0%   { opacity: 0; transform: scale(0); }
+  65%  { transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.anim-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dot-pop 220ms cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+/* Bars spring up */
+@keyframes bar-up {
+  0%   { transform: scaleY(0); opacity: 0; }
+  25%  { opacity: 1; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+.anim-bar {
+  transform-origin: bottom;
+  animation: bar-up 600ms cubic-bezier(0.34,1.3,0.64,1) both;
+}
+.anim-bar:nth-child(2)  { animation-delay: 40ms;  }
+.anim-bar:nth-child(3)  { animation-delay: 90ms;  }
+.anim-bar:nth-child(4)  { animation-delay: 140ms; }
+.anim-bar:nth-child(5)  { animation-delay: 190ms; }
+.anim-bar:nth-child(6)  { animation-delay: 240ms; }
+.anim-bar:nth-child(7)  { animation-delay: 290ms; }
+.anim-bar:nth-child(8)  { animation-delay: 340ms; }
+.anim-bar:nth-child(9)  { animation-delay: 390ms; }
+.anim-bar:nth-child(10) { animation-delay: 440ms; }
+.anim-bar:nth-child(11) { animation-delay: 490ms; }
+.anim-bar:nth-child(12) { animation-delay: 540ms; }
+
+/* Arc fills smoothly */
+@keyframes arc-draw {
+  0%   { stroke-dashoffset: 283; opacity: 0; }
+  12%  { opacity: 1; }
+  100% { stroke-dashoffset: 0;   opacity: 1; }
+}
+.anim-arc {
+  animation: arc-draw 1100ms cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+/* Number slides up */
+@keyframes num-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.anim-num {
+  animation: num-in 400ms cubic-bezier(0.22,1,0.36,1) 80ms both;
+}
+
+/* Area gradient — simple fade in, no transform (SVG path transforms are unreliable) */
+@keyframes area-fill {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.anim-fill {
+  animation: area-fill 700ms ease 40ms both;
+}
+
+/* Horizontal bar grow */
+@keyframes bar-grow {
+  from { width: 0; }
+}
+
+/* All-ops bar hover */
+.all-ops-bar {
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+.all-ops-bar:hover {
+  border-color: rgba(255,255,255,0.22) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 42%, rgba(255,255,255,0.02) 100%) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* Segment slide in from left */
+@keyframes seg-grow {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* Percentage fade up */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Fire icon animation ── */
+@keyframes flame-flicker {
+  0%,100% { transform: scaleX(1)    scaleY(1)    rotate(0deg);   filter: brightness(1) drop-shadow(0 0 3px #ff8c00);    }
+  12%      { transform: scaleX(.85) scaleY(1.12) rotate(-4deg);  filter: brightness(1.4) drop-shadow(0 0 6px #ff6a00);  }
+  28%      { transform: scaleX(1.1) scaleY(.9)   rotate(3.5deg); filter: brightness(.8)  drop-shadow(0 0 2px #ff4500);  }
+  50%      { transform: scaleX(.88) scaleY(1.08) rotate(-3deg);  filter: brightness(1.3) drop-shadow(0 0 5px #ff8c00);  }
+  70%      { transform: scaleX(1.08) scaleY(.93) rotate(2.5deg); filter: brightness(.9)  drop-shadow(0 0 4px #ffa500);  }
+}
+.flame-icon {
+  animation: flame-flicker 1.1s ease-in-out infinite;
+  transform-origin: center bottom;
+  display: inline-flex;
+}
+
+/* ── Activity pulse ── */
+@keyframes pulse-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.pulse-track {
+  animation: pulse-scroll 3s linear infinite;
+}
+
+/* ── Row timeline tooltip ── */
+.row-timeline {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+}
+.row-timeline.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ── Pulse dot ── */
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.pulse { animation: pulse 2s ease infinite; }
+
+/* ── Filter pill ── */
+.filter-pill {
+  transition: background 120ms ease, color 120ms ease;
+}
+.filter-pill:hover {
+  background: rgba(255,255,255,0.1) !important;
 }
