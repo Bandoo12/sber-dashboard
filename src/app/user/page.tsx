@@ -462,7 +462,6 @@ function RightPanel() {
           { label: 'Средний факт / день',   val: `${fmtN(DAILY_AVG)} мин`,   sub: `${fmtPct(DAILY_AVG / TODAY_PLAN)} от нормы`, color: pctColor(DAILY_AVG / TODAY_PLAN) },
           { label: 'Прогноз при текущем темпе', val: fmtPct(PROJECTED_PCT),  sub: `${fmtN(PROJECTED_FACT)} / ${fmtN(QTR_TOTAL_PLAN)} мин`, color: pctColor(PROJECTED_PCT) },
           { label: 'Максимально достижимо', val: fmtPct(MAX_PCT),            sub: 'при 100 % оставшихся дней',            color: T.blue },
-          { label: 'Серия ≥ 50 %',          val: `${STREAK} дн.`,            sub: 'подряд',                               color: STREAK >= 3 ? T.greenAct : T.textMuted },
         ].map(({ label, val, sub, color }) => (
           <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{label}</div>
