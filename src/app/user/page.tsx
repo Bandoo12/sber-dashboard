@@ -177,8 +177,8 @@ function MonthlyBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string })
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{m.label}</span>
               <div style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)' }}>{fmtPct(p)}</span>
                 <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(m.fact)}/{fmtN(m.plan)}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)' }}>{fmtPct(p)}</span>
               </div>
             </div>
             <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
