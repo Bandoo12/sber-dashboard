@@ -32,7 +32,8 @@ jobs:
           path: .next/cache
           key: ${{ runner.os }}-nextjs-fonts-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-nextjs-fonts-
-      - run: npm run build
+      - name: Build (with retry for flaky Google Fonts)
+        run: for i in 1 2 3; do npm run build && break || sleep 8; done
         env:
           NEXT_TELEMETRY_DISABLED: 1
       - uses: actions/configure-pages@v4
