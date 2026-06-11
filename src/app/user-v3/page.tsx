@@ -150,12 +150,12 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
   label: string; pct: number; gradFrom: string; gradTo: string; animDelay: number;
 }) {
   const ready = useReady(200 + animDelay);
-  const R = 36; const CX = 44; const CY = 44; const SW = 7;
+  const R = 50; const CX = 62; const CY = 62; const SW = 9;
   const circ = 2 * Math.PI * R;
   const arc  = pct * circ;
   const c    = pctColor(pct);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={CX*2} y2={CY*2}>
@@ -163,7 +163,7 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
             <stop offset="100%" stopColor={gradTo}/>
           </linearGradient>
           <filter id={`mg-v3-${label}`} x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={gradFrom} floodOpacity="0.5"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={gradFrom} floodOpacity="0.5"/>
           </filter>
         </defs>
         <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={SW}/>
@@ -180,12 +180,12 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
             }}
           />
         )}
-        <text x={CX} y={CY - 5} textAnchor="middle" fill={c}
-          fontSize="13" fontWeight="700" fontFamily="var(--font-manrope)">
+        <text x={CX} y={CY - 7} textAnchor="middle" fill={c}
+          fontSize="17" fontWeight="700" fontFamily="var(--font-manrope)">
           {fmtPct(pct)}
         </text>
-        <text x={CX} y={CY + 10} textAnchor="middle" fill={T.textDim}
-          fontSize="10" fontFamily="var(--font-inter)">
+        <text x={CX} y={CY + 11} textAnchor="middle" fill={T.textDim}
+          fontSize="12" fontFamily="var(--font-inter)">
           {label}
         </text>
       </svg>
@@ -199,8 +199,8 @@ function MonthlyBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
 
-      {/* Кружки — прибиты к верху */}
-      <div style={{ display: 'flex', gap: 4 }}>
+      {/* Кружки 2×2 — прибиты к верху */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {QTR_MONTHS.map((m, i) => (
           <MonthCircle
             key={m.label}
