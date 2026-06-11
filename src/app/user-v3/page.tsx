@@ -200,7 +200,7 @@ function MonthlyBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string })
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
 
       {/* Кружки 2×2 — прибиты к верху */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'max-content max-content', justifyContent: 'center', gap: 8 }}>
         {QTR_MONTHS.map((m, i) => (
           <MonthCircle
             key={m.label}
