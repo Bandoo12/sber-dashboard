@@ -333,8 +333,8 @@ function QuarterBar() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{quarter.label} · {QTR_ELAPSED_DAYS} / {quarter.totalDays} дн.</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: T.blue, fontFamily: 'var(--font-inter)' }}>{fmtPct(QTR_POS)} пути</span>
+        <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{quarter.label}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: T.blue, fontFamily: 'var(--font-inter)' }}>{fmtPct(QTR_POS)} выполнено</span>
       </div>
       <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', position: 'relative' }}>
         <div style={{ position: 'absolute', inset: 0, borderRadius: 999, background: `linear-gradient(90deg, ${T.blue}, ${T.green})`, boxShadow: `0 0 8px rgba(19,129,255,0.4)`, width: ready ? `${Math.min(QTR_POS * 100, 100)}%` : '0%', transition: 'width 1s cubic-bezier(0.22,1,0.36,1) 200ms' }}/>
