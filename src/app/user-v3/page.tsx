@@ -44,10 +44,11 @@ function getQuarter(iso: string): Quarter {
 const TODAY_ISO  = '2026-06-05';
 const TODAY_DISP = '05.06.26';
 const quarter    = getQuarter(TODAY_ISO);
-const BASE_PLAN  = 430;
-const QTR_WD     = 55;
+const BASE_PLAN       = 430;
+const QTR_WD          = 55;
 const QTR_ELAPSED_DAYS = 77;
-const QTR_POS    = QTR_ELAPSED_DAYS / quarter.totalDays;
+const QTR_POS         = QTR_ELAPSED_DAYS / quarter.totalDays;
+const QTR_PLAN_TARGET = 0.75;
 
 /* Помесячные данные (кружки в обороте карточки «Квартал») */
 const QTR_MONTHS = [
@@ -340,11 +341,12 @@ function QuarterBar() {
           <div style={{ position: 'absolute', inset: 0, borderRadius: 999, background: `linear-gradient(90deg, ${T.blue}, ${T.green})`, boxShadow: `0 0 8px rgba(19,129,255,0.4)`, width: ready ? `${Math.min(QTR_POS * 100, 100)}%` : '0%', transition: 'width 1s cubic-bezier(0.22,1,0.36,1) 200ms' }}/>
         </div>
         {/* Маркер границы плана */}
-        <div style={{ position: 'absolute', top: -3, bottom: -3, width: 2, borderRadius: 1, left: `${QTR_POS * 100}%`, transform: 'translateX(-50%)', background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 4px rgba(255,255,255,0.4)', pointerEvents: 'none' }}/>
+        <div style={{ position: 'absolute', top: -3, bottom: -3, width: 2, borderRadius: 1, left: `${QTR_PLAN_TARGET * 100}%`, transform: 'translateX(-50%)', background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 4px rgba(255,255,255,0.4)', pointerEvents: 'none' }}/>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>21.03.26</span>
-        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>20.06.26</span>
+      <div style={{ position: 'relative', height: 14 }}>
+        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', position: 'absolute', left: 0 }}>21.03.26</span>
+        <span style={{ fontSize: 10, color: T.textMuted, fontFamily: 'var(--font-inter)', position: 'absolute', left: `${QTR_PLAN_TARGET * 100}%`, transform: 'translateX(-50%)' }}>план {fmtPct(QTR_PLAN_TARGET)}</span>
+        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', position: 'absolute', right: 0 }}>20.06.26</span>
       </div>
     </div>
   );
