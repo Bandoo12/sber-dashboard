@@ -53,7 +53,15 @@ const TODAY_TASKS = [
   { label: 'Срочная',           count: 1, totalMin: 30  },
 ]; // Σ 14 задач · 286 мин
 
-/* Помесячные данные (оборот карточки «Квартал») */
+/* Задачи за квартал (оборот карточки «Квартал») */
+const QTR_TASKS = [
+  { label: 'Стандартная АФМ',  count: 350, totalMin: 7700  },
+  { label: 'Экспресс-проверка', count: 170, totalMin: 1700  },
+  { label: 'Сложная АФМ',      count: 45,  totalMin: 1800  },
+  { label: 'Срочная',           count: 20,  totalMin: 625   },
+]; // Σ 585 задач · 11 825 мин
+
+/* Помесячные данные (кружки) */
 const QTR_MONTHS = [
   { label: 'Март (с 21)', short: 'Мар', fact: 2408,  plan: 3010  },
   { label: 'Апрель',       short: 'Апр', fact: 4354,  plan: 9460  },
@@ -213,33 +221,39 @@ function MonthlyBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string })
         ))}
       </div>
 
-      {/* Бары — прибиты к низу */}
+      {/* Задачи за квартал — прибиты к низу */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ height: 1, background: T.border }}/>
-        {QTR_MONTHS.map((m, i) => {
-          const p = m.fact / m.plan;
-          const c = pctColor(p);
+        {QTR_TASKS.map((task, i) => {
+          const share  = task.totalMin / QTR_FACT;
+          const minPer = Math.round(task.totalMin / task.count);
           return (
-            <div key={m.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{m.label}</span>
-                <div style={{ display: 'flex', gap: 5, alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(m.fact)}/{fmtN(m.plan)}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)' }}>{fmtPct(p)}</span>
+                <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{task.label}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад · {minPer} мин/шт</span>
                 </div>
               </div>
               <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
                   background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                  boxShadow: `0 0 6px rgba(${pctRgb(p)},0.35)`,
-                  width: ready ? `${Math.min(p * 100, 100)}%` : '0%',
-                  transition: `width 800ms cubic-bezier(0.22,1,0.36,1) ${i * 80}ms`,
+                  boxShadow: `0 0 6px rgba(19,129,255,0.3)`,
+                  width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
+                  transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
               </div>
             </div>
           );
         })}
+        <div style={{ paddingTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
+            {fmtN(QTR_TASKS.reduce((s,t) => s+t.count, 0))} задач · {fmtN(QTR_FACT)} мин
+          </span>
+        </div>
       </div>
     </div>
   );
