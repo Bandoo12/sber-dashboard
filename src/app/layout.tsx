@@ -1,19 +1,6 @@
 import type { Metadata } from 'next';
-import { Inter, Manrope } from 'next/font/google';
 import './globals.css';
 import PasswordGate from '@/components/PasswordGate';
-
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin', 'cyrillic'],
-  display: 'swap',
-});
-
-const manrope = Manrope({
-  variable: '--font-manrope',
-  subsets: ['latin', 'cyrillic'],
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'Case Management Online — Выписка',
@@ -22,7 +9,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${inter.variable} ${manrope.variable} h-full`}>
+    <html lang="ru" className="h-full">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
+      </head>
       <body className="h-full bg-black text-[#FAFAFA]">
         <PasswordGate>{children}</PasswordGate>
       </body>

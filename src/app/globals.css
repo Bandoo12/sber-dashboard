@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-manrope);
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Manrope', sans-serif;
+}
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+  --font-manrope: 'Manrope', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
