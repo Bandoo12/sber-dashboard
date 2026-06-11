@@ -131,7 +131,7 @@ function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: stri
                 <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{task.label}</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{task.count}</span>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад · {minPer} мин/шт</span>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад × {minPer} мин</span>
                 </div>
               </div>
               <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
@@ -214,36 +214,35 @@ function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: st
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
 
       {/* Правая колонка — задачи */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 13, minWidth: 0 }}>
         {tasks.map((task, i) => {
           const share  = task.totalMin / qtrTotal;
           const minPer = Math.round(task.totalMin / task.count);
           return (
-            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
-                  <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад</span>
+                <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад × {minPer} мин</span>
                 </div>
               </div>
-              <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
                   background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                  boxShadow: `0 0 5px rgba(19,129,255,0.25)`,
+                  boxShadow: `0 0 6px rgba(19,129,255,0.25)`,
                   width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
                   transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
               </div>
-              <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{minPer} мин/шт · {fmtN(task.totalMin)} мин</span>
             </div>
           );
         })}
-        <div style={{ paddingTop: 2, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
-          <span style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} зад · {fmtN(qtrTotal)} мин
+        <div style={{ marginTop: 3, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
+            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} задач · {fmtN(qtrTotal)} мин
           </span>
         </div>
       </div>
@@ -336,8 +335,12 @@ function QuarterBar() {
         <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{quarter.label}</span>
         <span style={{ fontSize: 11, fontWeight: 600, color: T.blue, fontFamily: 'var(--font-inter)' }}>{fmtPct(QTR_POS)} выполнено</span>
       </div>
-      <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, borderRadius: 999, background: `linear-gradient(90deg, ${T.blue}, ${T.green})`, boxShadow: `0 0 8px rgba(19,129,255,0.4)`, width: ready ? `${Math.min(QTR_POS * 100, 100)}%` : '0%', transition: 'width 1s cubic-bezier(0.22,1,0.36,1) 200ms' }}/>
+      <div style={{ position: 'relative' }}>
+        <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 999, background: `linear-gradient(90deg, ${T.blue}, ${T.green})`, boxShadow: `0 0 8px rgba(19,129,255,0.4)`, width: ready ? `${Math.min(QTR_POS * 100, 100)}%` : '0%', transition: 'width 1s cubic-bezier(0.22,1,0.36,1) 200ms' }}/>
+        </div>
+        {/* Маркер границы плана */}
+        <div style={{ position: 'absolute', top: -3, bottom: -3, width: 2, borderRadius: 1, left: `${QTR_POS * 100}%`, transform: 'translateX(-50%)', background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 4px rgba(255,255,255,0.4)', pointerEvents: 'none' }}/>
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>21.03.26</span>
@@ -497,7 +500,7 @@ function ProfileView({ emp, isSelf = false }: { emp: Employee; isSelf?: boolean 
         <ProductivityRing
           id={`${ringId}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
-          title="Продуктивность за сегодня" dateLabel={TODAY_DISP}
+          title="Задачи на сегодня" dateLabel={TODAY_DISP}
           note={`База ${BASE_PLAN} мин`}
           gradFrom={emp.gradFrom} gradTo={emp.gradTo}
           backContent={<TasksBack gradFrom={emp.gradFrom} gradTo={emp.gradTo} tasks={emp.todayTasks}/>}
@@ -505,7 +508,7 @@ function ProfileView({ emp, isSelf = false }: { emp: Employee; isSelf?: boolean 
         <ProductivityRing
           id={`${ringId}-qtr`}
           plan={emp.qtrPlan} fact={emp.qtrFact}
-          title="С начала квартала" dateLabel="от 21.03.26"
+          title="Средняя за квартал" dateLabel="от 21.03.26"
           note={`${QTR_WD} раб. дн. · план до сегодня (вкл.)`}
           gradFrom={T.blue} gradTo={T.green}
           backContent={<MonthlyBack gradFrom={T.blue} gradTo={T.green} tasks={emp.qtrTasks}/>}
