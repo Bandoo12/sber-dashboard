@@ -332,11 +332,11 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
                 stroke={`url(#ag-${id})`} strokeWidth={SW} strokeLinecap="round"
                 filter={`url(#gl-${id})`} style={arcStyle}/>
             )}
-            <text x={CX} y={CY - 8} textAnchor="middle" fill={`url(#tg-${id})`}
+            <text x={CX} y={CY + 5} textAnchor="middle" fill={`url(#tg-${id})`}
               fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">
               {fmtPct(pct)}
             </text>
-            <text x={CX} y={CY + 15} textAnchor="middle" fill={T.textDim}
+            <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim}
               fontSize="11" fontFamily="var(--font-inter)">
               продуктивность
             </text>
@@ -377,50 +377,6 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
 }
 
 /* ── 5-ДНЕВНЫЙ ЧАРТ ── */
-function DayChart() {
-  const ready = useReady(300);
-  return (
-    <div style={{
-      background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-      borderRadius: 24, border: `1px solid ${T.border}`, padding: '20px 22px',
-    }}>
-      <div style={{ fontSize: 10, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-inter)', marginBottom: 16 }}>
-        Последние 5 рабочих дней
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {HISTORY.map((d, i) => {
-          const p   = d.fact / TODAY_PLAN;
-          const c   = pctColor(p);
-          const rgb = pctRgb(p);
-          const gF  = p >= 0.8 ? '#00D95B' : p >= 0.5 ? '#D9A600' : '#DC3535';
-          const gT  = p >= 0.8 ? '#1381FF' : p >= 0.5 ? '#6CB200' : '#D9A600';
-          return (
-            <div key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 11, fontFamily: 'var(--font-inter)', color: d.today ? T.text : T.textDim, width: 34, flexShrink: 0, fontWeight: d.today ? 600 : 400 }}>
-                {d.date}
-              </span>
-              <div style={{ flex: 1, height: 7, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
-                  background: `linear-gradient(90deg, ${gF}, ${gT})`,
-                  boxShadow: `0 0 7px rgba(${rgb},0.4)`,
-                  width: ready ? `${Math.min(p * 100, 100)}%` : '0%',
-                  transition: `width 800ms cubic-bezier(0.22,1,0.36,1) ${i * 55}ms`,
-                }}/>
-              </div>
-              <span style={{ fontSize: 11, fontWeight: 600, color: c, fontFamily: 'var(--font-inter)', width: 40, textAlign: 'right', flexShrink: 0 }}>
-                {fmtPct(p)}
-              </span>
-              <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', width: 50, flexShrink: 0 }}>
-                {fmtN(d.fact)} мин
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 /* ── КВАРТАЛЬНАЯ ПОЛОСА ── */
 function QuarterBar() {
@@ -574,8 +530,6 @@ export default function UserV3Page() {
             />
           </div>
 
-          {/* 5 дней */}
-          <DayChart/>
         </div>
       </main>
     </div>
