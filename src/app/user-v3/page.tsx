@@ -438,23 +438,21 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
 }
 
 /* ── ТАБ-ПЕРЕКЛЮЧАТЕЛЬ ── */
-type ViewMode = 'self' | 'team' | 'employee';
-function TabSwitcher({ view, selectedName, onChange }: { view: ViewMode; selectedName?: string; onChange: (v: ViewMode) => void }) {
+type ViewMode = 'self' | 'team';
+function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   const tabs: { id: ViewMode; label: string }[] = [
-    { id: 'self',     label: 'По себе' },
-    { id: 'team',     label: 'По сотрудникам' },
-    { id: 'employee', label: 'Сотрудник' },
+    { id: 'self', label: 'По себе' },
+    { id: 'team', label: 'По сотрудникам' },
   ];
   return (
     <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 999, padding: 4, gap: 2, alignSelf: 'flex-start' }}>
       {tabs.map(tab => {
         const active = view === tab.id;
-        const disabled = tab.id === 'employee' && !selectedName;
         return (
-          <button key={tab.id} onClick={() => !disabled && onChange(tab.id)} style={{
-            padding: '7px 18px', borderRadius: 999, border: 'none', cursor: disabled ? 'default' : 'pointer',
+          <button key={tab.id} onClick={() => onChange(tab.id)} style={{
+            padding: '7px 18px', borderRadius: 999, border: 'none', cursor: 'pointer',
             background: active ? T.btn : 'transparent',
-            color: active ? T.text : disabled ? T.textDim : T.textMuted,
+            color: active ? T.text : T.textMuted,
             fontSize: 13, fontWeight: active ? 600 : 400, fontFamily: 'var(--font-inter)',
             transition: 'background 150ms, color 150ms',
           }}>{tab.label}</button>
@@ -548,12 +546,16 @@ function Sidebar() {
 const SELF = EMPLOYEES[0];
 
 export default function UserV3Page() {
-  const [view, setView]       = useState<ViewMode>('self');
+  const [view, setView]         = useState<ViewMode>('self');
   const [selected, setSelected] = useState<Employee | null>(null);
 
   function handleSelectEmployee(emp: Employee) {
     setSelected(emp);
-    setView('employee');
+  }
+
+  function handleTabChange(v: ViewMode) {
+    setView(v);
+    setSelected(null);
   }
 
   return (
@@ -573,13 +575,13 @@ export default function UserV3Page() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900, margin: '0 auto', width: '100%' }}>
 
           {/* Переключатель */}
-          <TabSwitcher view={view} selectedName={selected?.name} onChange={setView}/>
+          <TabSwitcher view={view} onChange={handleTabChange}/>
 
           {/* Вид: по себе */}
           {view === 'self' && <ProfileView emp={SELF} isSelf/>}
 
-          {/* Вид: по сотрудникам */}
-          {view === 'team' && (
+          {/* Вид: по сотрудникам — список или drill-down */}
+          {view === 'team' && !selected && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               {EMPLOYEES.map(emp => (
                 <EmployeeCard key={emp.id} emp={emp} onSelect={handleSelectEmployee}/>
@@ -587,10 +589,9 @@ export default function UserV3Page() {
             </div>
           )}
 
-          {/* Вид: конкретный сотрудник */}
-          {view === 'employee' && selected && (
+          {view === 'team' && selected && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <button onClick={() => setView('team')} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: T.textDim, fontSize: 12, fontFamily: 'var(--font-inter)', padding: 0 }}>
+              <button onClick={() => setSelected(null)} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: T.textDim, fontSize: 12, fontFamily: 'var(--font-inter)', padding: 0 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M15 18l-6-6 6-6"/></svg>
                 К списку сотрудников
               </button>
