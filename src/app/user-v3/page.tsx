@@ -196,17 +196,17 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
   );
 }
 
-/* ── ОБОРОТ «КВАРТАЛ» — кружки слева, задачи справа ── */
+/* ── ОБОРОТ «КВАРТАЛ» — кружки слева (1 колонка), задачи справа ── */
 function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
   return (
     <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
 
-      {/* Левая колонка — 2×2 кружки */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flexShrink: 0 }}>
+      {/* Левая колонка — 4 кружка вертикально */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         {QTR_MONTHS.map((m, i) => (
-          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} gradFrom={gradFrom} gradTo={gradTo} animDelay={i * 80} size={78}/>
+          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} gradFrom={gradFrom} gradTo={gradTo} animDelay={i * 80} size={86}/>
         ))}
       </div>
 
