@@ -158,21 +158,22 @@ function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: stri
 }
 
 /* ── КРУЖОК МЕСЯЦА ── */
-function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
-  label: string; pct: number; gradFrom: string; gradTo: string; animDelay: number;
+function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
+  label: string; pct: number; gradFrom: string; gradTo: string; animDelay: number; size?: number;
 }) {
   const ready = useReady(200 + animDelay);
-  const R = 50; const CX = 62; const CY = 62; const SW = 9;
+  const R = size * 0.38; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
   const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct);
+  const fs = Math.round(size * 0.18);
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ overflow: 'visible' }}>
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ overflow: 'visible' }}>
         <defs>
-          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={CX*2} y2={CY*2}>
+          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={size} y2={size}>
             <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
           </linearGradient>
           <filter id={`mg-v3-${label}`} x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={gradFrom} floodOpacity="0.5"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={gradFrom} floodOpacity="0.5"/>
           </filter>
         </defs>
         <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={SW}/>
@@ -188,54 +189,61 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
             }}
           />
         )}
-        <text x={CX} y={CY - 7} textAnchor="middle" fill={c} fontSize="17" fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(pct)}</text>
-        <text x={CX} y={CY + 11} textAnchor="middle" fill={T.textDim} fontSize="12" fontFamily="var(--font-inter)">{label}</text>
+        <text x={CX} y={CY - 3} textAnchor="middle" fill={c} fontSize={fs} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(pct)}</text>
+        <text x={CX} y={CY + fs * 0.85} textAnchor="middle" fill={T.textDim} fontSize={fs * 0.7} fontFamily="var(--font-inter)">{label}</text>
       </svg>
     </div>
   );
 }
 
-/* ── ОБОРОТ «КВАРТАЛ» — кружки + задачи ── */
+/* ── ОБОРОТ «КВАРТАЛ» — кружки слева, задачи справа ── */
 function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'max-content max-content', justifyContent: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
+
+      {/* Левая колонка — 2×2 кружки */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flexShrink: 0 }}>
         {QTR_MONTHS.map((m, i) => (
-          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} gradFrom={gradFrom} gradTo={gradTo} animDelay={i * 80}/>
+          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} gradFrom={gradFrom} gradTo={gradTo} animDelay={i * 80} size={78}/>
         ))}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ height: 1, background: T.border }}/>
+
+      {/* Разделитель */}
+      <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
+
+      {/* Правая колонка — задачи */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
         {tasks.map((task, i) => {
           const share  = task.totalMin / qtrTotal;
           const minPer = Math.round(task.totalMin / task.count);
           return (
-            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{task.label}</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад · {minPer} мин/шт</span>
+                <span style={{ fontSize: 10, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
+                  <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад</span>
                 </div>
               </div>
               <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
                   background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                  boxShadow: `0 0 6px rgba(19,129,255,0.25)`,
+                  boxShadow: `0 0 5px rgba(19,129,255,0.25)`,
                   width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
                   transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
               </div>
+              <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{minPer} мин/шт · {fmtN(task.totalMin)} мин</span>
             </div>
           );
         })}
-        <div style={{ paddingTop: 4, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} задач · {fmtN(qtrTotal)} мин
+        <div style={{ paddingTop: 2, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
+            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} зад · {fmtN(qtrTotal)} мин
           </span>
         </div>
       </div>
@@ -407,33 +415,23 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
         </svg>
       </div>
 
-      {/* Два мини-кольца */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <MiniRing pct={todayPct} gradFrom={emp.gradFrom} gradTo={emp.gradTo}/>
-          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Сегодня</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <MiniRing pct={qtrPct} gradFrom={T.blue} gradTo={T.green}/>
-          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Квартал</span>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {[
-            { label: 'Сегодня', fact: emp.todayFact, plan: emp.todayPlan, pct: todayPct },
-            { label: 'Квартал', fact: emp.qtrFact,   plan: emp.qtrPlan,   pct: qtrPct   },
-          ].map(row => (
-            <div key={row.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: pctColor(row.pct), fontFamily: 'var(--font-inter)' }}>{fmtPct(row.pct)}</span>
-              </div>
-              <div style={{ height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${emp.gradFrom}, ${emp.gradTo})`, width: `${Math.min(row.pct * 100, 100)}%`, transition: 'width 700ms cubic-bezier(0.22,1,0.36,1)' }}/>
-              </div>
-              <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(row.fact)} / {fmtN(row.plan)} мин</span>
+      {/* Метрики */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[
+          { label: 'Сегодня', fact: emp.todayFact, plan: emp.todayPlan, pct: todayPct, gFrom: emp.gradFrom, gTo: emp.gradTo },
+          { label: 'Квартал', fact: emp.qtrFact,   plan: emp.qtrPlan,   pct: qtrPct,   gFrom: T.blue,       gTo: T.green   },
+        ].map(row => (
+          <div key={row.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: pctColor(row.pct), fontFamily: 'var(--font-manrope)' }}>{fmtPct(row.pct)}</span>
             </div>
-          ))}
-        </div>
+            <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${row.gFrom}, ${row.gTo})`, width: `${Math.min(row.pct * 100, 100)}%`, transition: 'width 700ms cubic-bezier(0.22,1,0.36,1)' }}/>
+            </div>
+            <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(row.fact)} / {fmtN(row.plan)} мин</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -445,7 +443,7 @@ function TabSwitcher({ view, selectedName, onChange }: { view: ViewMode; selecte
   const tabs: { id: ViewMode; label: string }[] = [
     { id: 'self',     label: 'По себе' },
     { id: 'team',     label: 'По сотрудникам' },
-    { id: 'employee', label: selectedName ? selectedName.split(' ')[0] + ' ' + (selectedName.split(' ')[1]?.[0] ?? '') + '.' : 'Сотрудник' },
+    { id: 'employee', label: 'Сотрудник' },
   ];
   return (
     <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 999, padding: 4, gap: 2, alignSelf: 'flex-start' }}>
@@ -582,7 +580,7 @@ export default function UserV3Page() {
 
           {/* Вид: по сотрудникам */}
           {view === 'team' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               {EMPLOYEES.map(emp => (
                 <EmployeeCard key={emp.id} emp={emp} onSelect={handleSelectEmployee}/>
               ))}
