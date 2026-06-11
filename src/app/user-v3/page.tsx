@@ -145,17 +145,17 @@ function TasksBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string }) {
   );
 }
 
-/* ── МИНИ-КРУЖОК МЕСЯЦА ── */
+/* ── КРУЖОК МЕСЯЦА ── */
 function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
   label: string; pct: number; gradFrom: string; gradTo: string; animDelay: number;
 }) {
   const ready = useReady(200 + animDelay);
-  const R = 22; const CX = 28; const CY = 28; const SW = 5;
+  const R = 36; const CX = 44; const CY = 44; const SW = 7;
   const circ = 2 * Math.PI * R;
   const arc  = pct * circ;
   const c    = pctColor(pct);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
       <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={CX*2} y2={CY*2}>
@@ -163,7 +163,7 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
             <stop offset="100%" stopColor={gradTo}/>
           </linearGradient>
           <filter id={`mg-v3-${label}`} x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor={gradFrom} floodOpacity="0.5"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={gradFrom} floodOpacity="0.5"/>
           </filter>
         </defs>
         <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={SW}/>
@@ -180,12 +180,15 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
             }}
           />
         )}
-        <text x={CX} y={CY + 4} textAnchor="middle" fill={c}
-          fontSize="10" fontWeight="700" fontFamily="var(--font-inter)">
+        <text x={CX} y={CY - 5} textAnchor="middle" fill={c}
+          fontSize="13" fontWeight="700" fontFamily="var(--font-manrope)">
           {fmtPct(pct)}
         </text>
+        <text x={CX} y={CY + 10} textAnchor="middle" fill={T.textDim}
+          fontSize="10" fontFamily="var(--font-inter)">
+          {label}
+        </text>
       </svg>
-      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{label}</span>
     </div>
   );
 }
@@ -194,10 +197,10 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay }: {
 function MonthlyBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string }) {
   const ready = useReady(200);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
 
-      {/* Кружки */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+      {/* Кружки — прибиты к верху */}
+      <div style={{ display: 'flex', gap: 4 }}>
         {QTR_MONTHS.map((m, i) => (
           <MonthCircle
             key={m.label}
@@ -210,33 +213,34 @@ function MonthlyBack({ gradFrom, gradTo }: { gradFrom: string; gradTo: string })
         ))}
       </div>
 
-      <div style={{ height: 1, background: T.border }}/>
-
-      {/* Строчные бары */}
-      {QTR_MONTHS.map((m, i) => {
-        const p = m.fact / m.plan;
-        const c = pctColor(p);
-        return (
-          <div key={m.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{m.label}</span>
-              <div style={{ display: 'flex', gap: 5, alignItems: 'baseline' }}>
-                <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(m.fact)}/{fmtN(m.plan)}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)' }}>{fmtPct(p)}</span>
+      {/* Бары — прибиты к низу */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ height: 1, background: T.border }}/>
+        {QTR_MONTHS.map((m, i) => {
+          const p = m.fact / m.plan;
+          const c = pctColor(p);
+          return (
+            <div key={m.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{m.label}</span>
+                <div style={{ display: 'flex', gap: 5, alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(m.fact)}/{fmtN(m.plan)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)' }}>{fmtPct(p)}</span>
+                </div>
+              </div>
+              <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
+                  background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
+                  boxShadow: `0 0 6px rgba(${pctRgb(p)},0.35)`,
+                  width: ready ? `${Math.min(p * 100, 100)}%` : '0%',
+                  transition: `width 800ms cubic-bezier(0.22,1,0.36,1) ${i * 80}ms`,
+                }}/>
               </div>
             </div>
-            <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
-              <div style={{
-                position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
-                background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                boxShadow: `0 0 6px rgba(${pctRgb(p)},0.35)`,
-                width: ready ? `${Math.min(p * 100, 100)}%` : '0%',
-                transition: `width 800ms cubic-bezier(0.22,1,0.36,1) ${i * 80}ms`,
-              }}/>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -513,7 +517,7 @@ export default function UserV3Page() {
         </div>
 
         {/* Основной контент */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900, margin: '0 auto', width: '100%' }}>
 
           {/* Шапка пользователя — упрощённая */}
           <div style={{
