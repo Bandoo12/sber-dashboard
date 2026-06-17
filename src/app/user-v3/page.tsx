@@ -420,21 +420,15 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
         </svg>
       </div>
 
-      {/* Метрики */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Метрики — два кружка */}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'space-around' }}>
         {[
-          { label: 'Сегодня', fact: emp.todayFact, plan: emp.todayPlan, pct: todayPct, gFrom: emp.gradFrom, gTo: emp.gradTo },
-          { label: 'Квартал', fact: emp.qtrFact,   plan: emp.qtrPlan,   pct: qtrPct,   gFrom: T.blue,       gTo: T.green   },
+          { label: 'Сегодня', pct: todayPct, gFrom: emp.gradFrom, gTo: emp.gradTo },
+          { label: 'Квартал', pct: qtrPct,   gFrom: T.blue,       gTo: T.green   },
         ].map(row => (
-          <div key={row.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: pctColor(row.pct), fontFamily: 'var(--font-manrope)' }}>{fmtPct(row.pct)}</span>
-            </div>
-            <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${row.gFrom}, ${row.gTo})`, width: `${Math.min(row.pct * 100, 100)}%`, transition: 'width 700ms cubic-bezier(0.22,1,0.36,1)' }}/>
-            </div>
-            <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{fmtN(row.fact)} / {fmtN(row.plan)} мин</span>
+          <div key={row.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <MiniRing pct={row.pct} gradFrom={row.gFrom} gradTo={row.gTo} size={72}/>
+            <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
           </div>
         ))}
       </div>
