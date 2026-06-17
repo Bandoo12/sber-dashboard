@@ -542,7 +542,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
               }}>
                 {onTrack
                   ? '✓ успеваем'
-                  : <><svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg> не успеваем</>
+                  : <><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg> не успеваем</>
                 }
               </span>
               <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
