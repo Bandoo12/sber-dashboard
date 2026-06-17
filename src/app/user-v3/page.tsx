@@ -1,24 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, createContext } from 'react';
 import Link from 'next/link';
 
-/* ── TOKENS ── */
-const T = {
-  bg:        '#000000',
-  surface:   '#1B1B1B',
-  surface2:  '#21222C',
-  btn:       '#3A3D43',
-  border:    'rgba(255,255,255,0.08)',
-  text:      '#FAFAFA',
-  textMuted: '#AAAAAB',
-  textDim:   '#858585',
-  blue:      '#1381FF',
-  green:     '#00D95B',
-  greenAct:  '#00B24B',
-  yellow:    '#D9A600',
-  red:       '#DC3535',
+/* ── THEME TOKENS ── */
+const DARK_T = {
+  bg:         '#000000',
+  surface:    '#1B1B1B',
+  surface2:   '#21222C',
+  btn:        '#3A3D43',
+  border:     'rgba(255,255,255,0.08)',
+  text:       '#FAFAFA',
+  textMuted:  '#AAAAAB',
+  textDim:    '#858585',
+  blue:       '#1381FF',
+  green:      '#00D95B',
+  greenAct:   '#00B24B',
+  yellow:     '#D9A600',
+  red:        '#DC3535',
+  track:      'rgba(255,255,255,0.07)',
+  tabBg:      'rgba(255,255,255,0.05)',
+  statBg:     'rgba(255,255,255,0.04)',
+  statBorder: 'rgba(255,255,255,0.06)',
+  cardBg:     'rgba(255,255,255,0.025)',
 };
+const LIGHT_T = {
+  bg:         '#F0F2F5',
+  surface:    '#FFFFFF',
+  surface2:   '#F5F7FA',
+  btn:        '#E2E5EC',
+  border:     'rgba(0,0,0,0.08)',
+  text:       '#0D0F18',
+  textMuted:  '#4A4D5C',
+  textDim:    '#8A8EA0',
+  blue:       '#1068D9',
+  green:      '#00A044',
+  greenAct:   '#008838',
+  yellow:     '#C08000',
+  red:        '#C42B2B',
+  track:      'rgba(0,0,0,0.07)',
+  tabBg:      'rgba(0,0,0,0.05)',
+  statBg:     'rgba(0,0,0,0.03)',
+  statBorder: 'rgba(0,0,0,0.08)',
+  cardBg:     '#FFFFFF',
+};
+type Tokens = typeof DARK_T;
+const ThemeCtx = createContext<{ T: Tokens; dark: boolean; toggle: () => void }>({ T: DARK_T, dark: true, toggle: () => {} });
+function useTheme() { return useContext(ThemeCtx); }
 
 /* ── TYPES ── */
 type TaskData = { label: string; count: number; totalMin: number };
@@ -26,46 +54,53 @@ type Employee = {
   id: string; name: string; initials: string;
   gradFrom: string; gradTo: string;
   todayFact: number; todayPlan: number;
-  qtrFact: number;  qtrPlan: number;
+  qtrFact: number; qtrPlan: number;
   todayTasks: TaskData[]; qtrTasks: TaskData[];
 };
 
-/* ── ДАННЫЕ КВАРТАЛА ── */
+/* ── КВАРТАЛЬНЫЕ КОНСТАНТЫ ── */
 type Quarter = { q: number; start: string; end: string; label: string; totalDays: number };
 const QUARTERS: Quarter[] = [
   { q: 1, start: '2025-11-01', end: '2026-03-20', label: '1 квартал 2026', totalDays: 140 },
-  { q: 2, start: '2026-03-21', end: '2026-06-20', label: '2 квартал 2026', totalDays: 92 },
-  { q: 3, start: '2026-06-21', end: '2026-09-20', label: '3 квартал 2026', totalDays: 92 },
-  { q: 4, start: '2026-09-21', end: '2026-10-31', label: '4 квартал 2026', totalDays: 41 },
+  { q: 2, start: '2026-03-21', end: '2026-06-20', label: '2 квартал 2026', totalDays:  92 },
+  { q: 3, start: '2026-06-21', end: '2026-09-20', label: '3 квартал 2026', totalDays:  92 },
+  { q: 4, start: '2026-09-21', end: '2026-10-31', label: '4 квартал 2026', totalDays:  41 },
 ];
 function getQuarter(iso: string): Quarter {
   return QUARTERS.find(q => iso >= q.start && iso <= q.end) ?? QUARTERS[1];
 }
-const TODAY_ISO  = '2026-06-05';
-const TODAY_DISP = '05.06.26';
-const quarter    = getQuarter(TODAY_ISO);
-const BASE_PLAN       = 430;
-const QTR_WD          = 55;
-const QTR_ELAPSED_DAYS = 77;
-const QTR_POS         = QTR_ELAPSED_DAYS / quarter.totalDays;
-const QTR_PLAN_TARGET = 0.75;
 
-/* Помесячные данные (кружки в обороте карточки «Квартал») */
+const TODAY_ISO   = '2026-06-05';
+const TODAY_DISP  = '05.06.26';
+const quarter     = getQuarter(TODAY_ISO);
+
+const BASE_PLAN        = 430;   // мин/день
+const QTR_WD           = 55;   // всего раб. дней в квартале
+const QTR_ELAPSED_DAYS = 77;   // календарных дней прошло
+const QTR_ELAPSED_WD   = 46;   // раб. дней прошло (≈ QTR_WD * elapsed/total)
+const WD_REMAINING     = QTR_WD - QTR_ELAPSED_WD;   // 9 раб. дней осталось
+const DAYS_REMAINING   = quarter.totalDays - QTR_ELAPSED_DAYS; // 15 кал. дней осталось
+const QTR_POS          = QTR_ELAPSED_DAYS / quarter.totalDays; // 0.837
+const QTR_PLAN_TARGET  = 0.75;
+
+// план ДО ТЕКУЩЕГО ДНЯ (сравниваем с тем, что сотрудник должен был сделать к сегодняшнему дню)
+const QTR_PLAN_TO_DATE = QTR_ELAPSED_WD * BASE_PLAN; // 19 780 мин
+const QTR_FULL_PLAN    = QTR_WD * BASE_PLAN;          // 23 650 мин
+
 const QTR_MONTHS = [
-  { label: 'Март (с 21)', short: 'Мар', fact: 2408,  plan: 3010  },
-  { label: 'Апрель',       short: 'Апр', fact: 4354,  plan: 9460  },
-  { label: 'Май',          short: 'Май', fact: 4515,  plan: 9030  },
-  { label: 'Июнь (1–5)',   short: 'Июн', fact: 548,   plan: 2150  },
+  { label: 'Март (с 21)', short: 'Мар', fact: 2408, plan: 3010 },
+  { label: 'Апрель',      short: 'Апр', fact: 4354, plan: 9460 },
+  { label: 'Май',         short: 'Май', fact: 4515, plan: 9030 },
+  { label: 'Июнь (1–5)', short: 'Июн', fact: 548,  plan: 2150 },
 ];
 
 /* ── СОТРУДНИКИ ── */
 function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]; qtrTasks: TaskData[] } {
-  // Пропорции: 62% стандартная, 14% экспресс, 14% сложная, 10% срочная
   const split = [
-    { label: 'Стандартная АФМ',   minPerTask: 22,  share: 0.62 },
-    { label: 'Экспресс-проверка',  minPerTask: 10,  share: 0.14 },
-    { label: 'Сложная АФМ',       minPerTask: 40,  share: 0.14 },
-    { label: 'Срочная',            minPerTask: 30,  share: 0.10 },
+    { label: 'Стандартная АФМ',  minPerTask: 22, share: 0.62 },
+    { label: 'Экспресс-проверка', minPerTask: 10, share: 0.14 },
+    { label: 'Сложная АФМ',      minPerTask: 40, share: 0.14 },
+    { label: 'Срочная',           minPerTask: 30, share: 0.10 },
   ];
   const build = (total: number): TaskData[] =>
     split.map(s => {
@@ -75,20 +110,33 @@ function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]
   return { todayTasks: build(todayFact), qtrTasks: build(qtrFact) };
 }
 
+// qtrFact vs QTR_PLAN_TO_DATE (19 780 мин) — данные согласованы с todayFact
 const EMPLOYEES: Employee[] = [
-  { id: 'e1', name: 'Иванова Анна Сергеевна',          initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact: 286, todayPlan: 430, qtrFact: 11825, qtrPlan: QTR_WD * 430, ...makeTasks(286, 11825) },
-  { id: 'e2', name: 'Петров Сергей Иванович',           initials: 'ПС', gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 18200, qtrPlan: QTR_WD * 430, ...makeTasks(396, 18200) },
-  { id: 'e3', name: 'Смирнова Ольга Петровна',          initials: 'СО', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 21035, qtrPlan: QTR_WD * 430, ...makeTasks(430, 21035) },
-  { id: 'e4', name: 'Козлов Дмитрий Александрович',    initials: 'КД', gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  9800, qtrPlan: QTR_WD * 430, ...makeTasks(189,  9800) },
-  { id: 'e5', name: 'Новикова Екатерина Дмитриевна',   initials: 'НЕ', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 14500, qtrPlan: QTR_WD * 430, ...makeTasks(314, 14500) },
-  { id: 'e6', name: 'Морозов Алексей Владимирович',    initials: 'МА', gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 20800, qtrPlan: QTR_WD * 430, ...makeTasks(430, 20800) },
+  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact: 286, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(286, 12800) },
+  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 18000, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(396, 18000) },
+  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 19900, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(430, 19900) },
+  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(189,  8500) },
+  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 14500, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(314, 14500) },
+  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 20100, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(430, 20100) },
 ];
 
 /* ── HELPERS ── */
-function pctColor(p: number) { return p >= 0.8 ? T.greenAct : p >= 0.5 ? T.yellow : T.red; }
-function pctRgb(p: number)   { return p >= 0.8 ? '0,178,75' : p >= 0.5 ? '217,166,0' : '220,53,53'; }
-function fmtPct(p: number)   { const v = p * 100; return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`; }
-function fmtN(n: number)     { return n.toLocaleString('ru-RU'); }
+function pctColor(p: number, T: Tokens) { return p >= 0.66 ? T.greenAct : p >= 0.33 ? T.yellow : T.red; }
+function pctRgb(p: number)  { return p >= 0.66 ? '0,178,75' : p >= 0.33 ? '217,166,0' : '220,53,53'; }
+// Градиент по проценту: красный < 33%, жёлтый < 66%, зелёный ≥ 66%
+function pctGrad(p: number, T: Tokens) {
+  if (p < 0.33) return { from: T.red,    to: '#FF8070' };
+  if (p < 0.66) return { from: T.yellow, to: '#FFD060' };
+  return              { from: T.greenAct, to: T.green  };
+}
+function fmtPct(p: number) { const v = p * 100; return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`; }
+function fmtN(n: number)   { return n.toLocaleString('ru-RU'); }
+
+// Прогноз: успеет ли сотрудник выполнить полный план квартала при текущей средней
+function isOnTrack(qtrFact: number) {
+  const projected = qtrFact + (qtrFact / QTR_ELAPSED_WD) * WD_REMAINING;
+  return projected >= QTR_FULL_PLAN;
+}
 
 /* ── HOOKS ── */
 function useCount(target: number, dur = 1100): number {
@@ -112,8 +160,9 @@ function useReady(delay = 80): boolean {
   return r;
 }
 
-/* ── ОБОРОТ «СЕГОДНЯ» — задачи ── */
+/* ── ОБОРОТ «СЕГОДНЯ» ── */
 function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
+  const { T } = useTheme();
   const ready    = useReady(200);
   const totalMin = tasks.reduce((s, t) => s + t.totalMin, 0);
   const totalCnt = tasks.reduce((s, t) => s + t.count,    0);
@@ -135,11 +184,10 @@ function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: stri
                   <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад × {minPer} мин</span>
                 </div>
               </div>
-              <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ height: 6, borderRadius: 999, background: T.track, overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
                   background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                  boxShadow: `0 0 6px rgba(217,166,0,0.25)`,
                   width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
                   transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
@@ -162,9 +210,10 @@ function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: stri
 function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
   label: string; pct: number; gradFrom: string; gradTo: string; animDelay: number; size?: number;
 }) {
+  const { T, dark } = useTheme();
   const ready = useReady(200 + animDelay);
   const R = size * 0.38; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
-  const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct);
+  const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct, T);
   const fs = Math.round(size * 0.18);
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -174,10 +223,10 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
             <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
           </linearGradient>
           <filter id={`mg-v3-${label}`} x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={gradFrom} floodOpacity="0.5"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={gradFrom} floodOpacity={dark ? '0.5' : '0.2'}/>
           </filter>
         </defs>
-        <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={SW}/>
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
         {pct > 0 && (
           <circle cx={CX} cy={CY} r={R} fill="none"
             stroke={`url(#mc-v3-${label})`} strokeWidth={SW} strokeLinecap="round"
@@ -197,24 +246,19 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
   );
 }
 
-/* ── ОБОРОТ «КВАРТАЛ» — кружки слева (1 колонка), задачи справа ── */
+/* ── ОБОРОТ «КВАРТАЛ» ── */
 function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
+  const { T } = useTheme();
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
   return (
     <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
-
-      {/* Левая колонка — 4 кружка вертикально */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         {QTR_MONTHS.map((m, i) => (
           <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} gradFrom={gradFrom} gradTo={gradTo} animDelay={i * 80} size={86}/>
         ))}
       </div>
-
-      {/* Разделитель */}
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
-
-      {/* Правая колонка — задачи */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 13, minWidth: 0 }}>
         {tasks.map((task, i) => {
           const share  = task.totalMin / qtrTotal;
@@ -228,11 +272,10 @@ function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: st
                   <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад × {minPer} мин</span>
                 </div>
               </div>
-              <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ height: 6, borderRadius: 999, background: T.track, overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
                   background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                  boxShadow: `0 0 6px rgba(19,129,255,0.25)`,
                   width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
                   transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
@@ -259,11 +302,13 @@ interface RingProps {
 }
 function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gradTo, backContent }: RingProps) {
   const [hovered, setHovered] = useState(false);
+  const { T, dark } = useTheme();
   const ready    = useReady(100);
   const animFact = useCount(fact);
   const animPlan = useCount(plan);
   const pct  = plan > 0 ? Math.min(fact / plan, 1) : 0;
   const rgb  = pctRgb(pct);
+  const grad = pctGrad(pct, T);
   const R = 88; const CX = 120; const CY = 120; const SW = 20;
   const circ = 2 * Math.PI * R; const arc = pct * circ;
   const arcStyle: React.CSSProperties = {
@@ -272,11 +317,14 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
     transition: ready ? 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)' : 'none',
     transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px`,
   };
+  const cardBg = dark
+    ? `linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 42%, rgba(255,255,255,0.02) 100%)`
+    : `linear-gradient(145deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.02) 60%, ${T.surface} 100%)`;
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
       flex: 1, borderRadius: 28,
-      border: hovered ? `1px solid rgba(${rgb},0.45)` : `1px solid rgba(255,255,255,0.10)`,
-      background: `linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 42%, rgba(255,255,255,0.02) 100%)`,
+      border: hovered ? `1px solid rgba(${rgb},0.45)` : `1px solid ${T.border}`,
+      background: cardBg,
       overflow: 'hidden', perspective: 900, transition: 'border-color 150ms ease',
     }}>
       <div style={{
@@ -300,17 +348,17 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
                 <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
               </linearGradient>
               <filter id={`gl-${id}`} x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor={gradFrom} floodOpacity="0.5"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor={gradFrom} floodOpacity={dark ? '0.5' : '0.2'}/>
               </filter>
             </defs>
-            <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={SW}/>
+            <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
             {pct > 0 && <circle cx={CX} cy={CY} r={R} fill="none" stroke={`url(#ag-${id})`} strokeWidth={SW} strokeLinecap="round" filter={`url(#gl-${id})`} style={arcStyle}/>}
             <text x={CX} y={CY + 5} textAnchor="middle" fill={`url(#tg-${id})`} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
             <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>
           </svg>
           <div style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%' }}>
-            {[{ label: 'Факт', val: animFact, c: pctColor(pct) }, { label: 'План', val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
-              <div key={label} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: 'План', val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
+              <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
                 <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)', letterSpacing: '-0.02em', lineHeight: 1 }}>{fmtN(val)}</div>
                 <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginTop: 1 }}>мин</div>
@@ -327,50 +375,28 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
   );
 }
 
-/* ── КВАРТАЛЬНАЯ ПОЛОСА ── */
-function QuarterBar() {
-  const ready = useReady(150);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{quarter.label}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: T.blue, fontFamily: 'var(--font-inter)' }}>{fmtPct(QTR_POS)} выполнено</span>
-      </div>
-      <div style={{ position: 'relative' }}>
-        <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', position: 'relative' }}>
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 999, background: `linear-gradient(90deg, ${T.blue}, ${T.green})`, boxShadow: `0 0 8px rgba(19,129,255,0.4)`, width: ready ? `${Math.min(QTR_POS * 100, 100)}%` : '0%', transition: 'width 1s cubic-bezier(0.22,1,0.36,1) 200ms' }}/>
-        </div>
-        {/* Маркер границы плана */}
-        <div style={{ position: 'absolute', top: -3, bottom: -3, width: 2, borderRadius: 1, left: `${QTR_PLAN_TARGET * 100}%`, transform: 'translateX(-50%)', background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 4px rgba(255,255,255,0.4)', pointerEvents: 'none' }}/>
-      </div>
-      <div style={{ position: 'relative', height: 14 }}>
-        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', position: 'absolute', left: 0 }}>21.03.26</span>
-        <span style={{ fontSize: 10, color: T.textMuted, fontFamily: 'var(--font-inter)', position: 'absolute', left: `${QTR_PLAN_TARGET * 100}%`, transform: 'translateX(-50%)' }}>план {fmtPct(QTR_PLAN_TARGET)}</span>
-        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', position: 'absolute', right: 0 }}>20.06.26</span>
-      </div>
-    </div>
-  );
-}
-
-/* ── МИНИ-КОЛЬЦО (для карточки сотрудника) ── */
+/* ── МИНИ-КОЛЬЦО (цвет по проценту) ── */
 function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom: string; gradTo: string; size?: number }) {
+  const { T, dark } = useTheme();
   const ready = useReady(120);
   const R = size * 0.34; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
-  const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct);
+  const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct, T);
+  const gradId = `mr-${gradFrom.slice(1)}-${gradTo.slice(1)}`;
+  const filtId = `mf-${gradFrom.slice(1)}`;
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <defs>
-        <linearGradient id={`mr-${gradFrom.slice(1)}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={size} y2={size}>
+        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={size} y2={size}>
           <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
         </linearGradient>
-        <filter id={`mf-${gradFrom.slice(1)}`} x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={gradFrom} floodOpacity="0.6"/>
+        <filter id={filtId} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={gradFrom} floodOpacity={dark ? '0.6' : '0.25'}/>
         </filter>
       </defs>
-      <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={SW}/>
+      <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
       {pct > 0 && (
-        <circle cx={CX} cy={CY} r={R} fill="none" stroke={`url(#mr-${gradFrom.slice(1)})`} strokeWidth={SW} strokeLinecap="round"
-          filter={`url(#mf-${gradFrom.slice(1)})`}
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke={`url(#${gradId})`} strokeWidth={SW} strokeLinecap="round"
+          filter={`url(#${filtId})`}
           style={{ strokeDasharray: `${arc.toFixed(2)} ${(circ-arc).toFixed(2)}`, strokeDashoffset: ready ? 0 : circ, transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none', transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px` }}
         />
       )}
@@ -382,25 +408,30 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
 /* ── КАРТОЧКА СОТРУДНИКА ── */
 function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee) => void }) {
   const [hov, setHov] = useState(false);
+  const { T, dark } = useTheme();
   const todayPct = emp.todayFact / emp.todayPlan;
   const qtrPct   = emp.qtrFact   / emp.qtrPlan;
   const rgb = pctRgb(todayPct);
+  // Цвет кружков по проценту (красный/жёлтый/зелёный)
+  const todayGrad = pctGrad(todayPct, T);
+  const qtrGrad   = pctGrad(qtrPct, T);
   return (
     <div
       onClick={() => onSelect(emp)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        borderRadius: 20, padding: '18px 18px',
+        borderRadius: 20, padding: '20px 20px 22px',
         border: hov ? `1px solid rgba(${rgb},0.4)` : `1px solid ${T.border}`,
         background: hov
-          ? `linear-gradient(145deg, rgba(${rgb},0.1) 0%, rgba(${rgb},0.04) 60%, rgba(255,255,255,0.02) 100%)`
-          : 'rgba(255,255,255,0.025)',
+          ? (dark
+              ? `linear-gradient(145deg, rgba(${rgb},0.1) 0%, rgba(${rgb},0.04) 60%, rgba(255,255,255,0.02) 100%)`
+              : `linear-gradient(145deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.02) 60%, ${T.surface} 100%)`)
+          : T.cardBg,
         cursor: 'pointer', transition: 'border-color 150ms, background 150ms',
-        display: 'flex', flexDirection: 'column', gap: 14,
+        display: 'flex', flexDirection: 'column', gap: 16,
       }}
     >
-      {/* Шапка карточки */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{
           width: 38, height: 38, borderRadius: 999, flexShrink: 0,
@@ -420,14 +451,14 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
         </svg>
       </div>
 
-      {/* Метрики — два кружка */}
+      {/* Два кружка: цвет по %  */}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'space-around' }}>
         {[
-          { label: 'Сегодня', pct: todayPct, gFrom: emp.gradFrom, gTo: emp.gradTo },
-          { label: 'Квартал', pct: qtrPct,   gFrom: T.blue,       gTo: T.green   },
+          { label: 'Сегодня', pct: todayPct, grad: todayGrad },
+          { label: 'С нач. кв.', pct: qtrPct, grad: qtrGrad },
         ].map(row => (
           <div key={row.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <MiniRing pct={row.pct} gradFrom={row.gFrom} gradTo={row.gTo} size={72}/>
+            <MiniRing pct={row.pct} gradFrom={row.grad.from} gradTo={row.grad.to} size={88}/>
             <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
           </div>
         ))}
@@ -439,12 +470,13 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
 /* ── ТАБ-ПЕРЕКЛЮЧАТЕЛЬ ── */
 type ViewMode = 'self' | 'team';
 function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
+  const { T } = useTheme();
   const tabs: { id: ViewMode; label: string }[] = [
     { id: 'self', label: 'По себе' },
     { id: 'team', label: 'По сотрудникам' },
   ];
   return (
-    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 999, padding: 4, gap: 2, alignSelf: 'flex-start' }}>
+    <div style={{ display: 'flex', background: T.tabBg, borderRadius: 999, padding: 4, gap: 2, alignSelf: 'flex-start' }}>
       {tabs.map(tab => {
         const active = view === tab.id;
         return (
@@ -461,16 +493,24 @@ function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMod
   );
 }
 
-/* ── ПРОФИЛЬ СОТРУДНИКА (используется для "По себе" и drill-down) ── */
-function ProfileView({ emp, isSelf = false }: { emp: Employee; isSelf?: boolean }) {
-  const ringId = emp.id;
+/* ── ПРОФИЛЬ СОТРУДНИКА ── */
+function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
+  const { T } = useTheme();
+  const pctRgbVal = pctRgb(emp.todayFact / emp.todayPlan);
+  const onTrack   = isOnTrack(emp.qtrFact);
+  const avgPerDay = Math.round(emp.qtrFact / QTR_ELAPSED_WD);
+
+  // Квартальный ринг: цвет по проценту план-на-сегодня
+  const qtrPct  = emp.qtrFact / QTR_PLAN_TO_DATE;
+  const qtrGrad = pctGrad(qtrPct, T);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Шапка */}
+      {/* Шапка — без прогресс-бара */}
       <div style={{
-        background: `linear-gradient(145deg, rgba(${pctRgb(emp.todayFact/emp.todayPlan)},0.08) 0%, rgba(0,178,75,0.04) 60%, rgba(255,255,255,0.01) 100%)`,
-        borderRadius: 24, border: `1px solid rgba(${pctRgb(emp.todayFact/emp.todayPlan)},0.18)`,
-        padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14,
+        background: `linear-gradient(145deg, rgba(${pctRgbVal},0.08) 0%, rgba(128,128,128,0.04) 60%, rgba(128,128,128,0.01) 100%)`,
+        borderRadius: 24, border: `1px solid rgba(${pctRgbVal},0.18)`,
+        padding: '18px 22px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{
@@ -478,36 +518,52 @@ function ProfileView({ emp, isSelf = false }: { emp: Employee; isSelf?: boolean 
             background: `linear-gradient(135deg, ${emp.gradFrom} 0%, ${emp.gradTo} 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-manrope)',
-            boxShadow: `0 0 18px rgba(${pctRgb(emp.todayFact/emp.todayPlan)},0.3)`,
+            boxShadow: `0 0 18px rgba(${pctRgbVal},0.3)`,
           }}>{emp.initials}</div>
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{emp.name}</span>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)', marginBottom: 5 }}>{emp.name}</div>
+            {/* Дни до конца квартала + прогноз */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
+                {quarter.label} · осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дн.</strong> / {WD_REMAINING} раб.
+              </span>
+              <span style={{
+                fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-inter)',
+                color: onTrack ? T.greenAct : T.red,
+                display: 'flex', alignItems: 'center', gap: 3,
+              }}>
+                {onTrack ? '✓ успеваем' : '✗ не успеваем'}
+              </span>
+              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
+                ср. {fmtN(avgPerDay)} мин/день
+              </span>
+            </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Сегодня</div>
             <div style={{ fontSize: 17, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{TODAY_DISP}</div>
           </div>
         </div>
-        <QuarterBar/>
       </div>
 
       {/* Два кольца */}
       <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
         <ProductivityRing
-          id={`${ringId}-today`}
+          id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
           title="Задачи на сегодня" dateLabel={TODAY_DISP}
           note={`База ${BASE_PLAN} мин`}
-          gradFrom={emp.gradFrom} gradTo={emp.gradTo}
-          backContent={<TasksBack gradFrom={emp.gradFrom} gradTo={emp.gradTo} tasks={emp.todayTasks}/>}
+          gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from}
+          gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to}
+          backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
         />
         <ProductivityRing
-          id={`${ringId}-qtr`}
-          plan={emp.qtrPlan} fact={emp.qtrFact}
-          title="Средняя за квартал" dateLabel="от 21.03.26"
-          note={`${QTR_WD} раб. дн. · план до сегодня (вкл.)`}
-          gradFrom={T.blue} gradTo={T.green}
-          backContent={<MonthlyBack gradFrom={T.blue} gradTo={T.green} tasks={emp.qtrTasks}/>}
+          id={`${emp.id}-qtr`}
+          plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
+          title={`Факт с 21.03 по ${TODAY_DISP}`} dateLabel="С начала квартала"
+          note={`план ${QTR_ELAPSED_WD} раб. дн. × ${BASE_PLAN} мин`}
+          gradFrom={qtrGrad.from} gradTo={qtrGrad.to}
+          backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks}/>}
         />
       </div>
     </div>
@@ -524,19 +580,21 @@ const NAV_ICONS = [
   <svg key="st" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.6-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.484.484 0 0014 3h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 00-.6.22L2.74 8.87a.47.47 0 00.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.6.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.47.47 0 00-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>,
   <svg key="l"  viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>,
 ];
+
 function Sidebar() {
+  const { T } = useTheme();
   return (
-    <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 92, zIndex: 40, background: T.bg, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0', gap: 8 }}>
-      <div style={{ width: 44, height: 44, borderRadius: 999, background: '#3A3D43', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, flexShrink: 0 }}>
-        <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M10 1L1 6l9 4.5L19 6 10 1zM1 14l9 5 9-5M1 10l9 5 9-5" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+    <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 92, zIndex: 40, background: T.bg, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0', gap: 8, transition: 'background 200ms' }}>
+      <div style={{ width: 44, height: 44, borderRadius: 999, background: T.btn, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, flexShrink: 0 }}>
+        <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M10 1L1 6l9 4.5L19 6 10 1zM1 14l9 5 9-5M1 10l9 5 9-5" stroke={T.text} strokeWidth="1.5" strokeLinejoin="round"/></svg>
       </div>
       {NAV_ICONS.slice(0, 6).map((icon, i) => {
         const active = i === 4;
-        const el = <div className="nav-item" style={{ width: 44, height: 44, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: active ? '#FAFAFA' : '#E3E3E3', background: active ? '#3A3D43' : 'transparent' }}>{icon}</div>;
+        const el = <div className="nav-item" style={{ width: 44, height: 44, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: active ? T.text : T.textMuted, background: active ? T.btn : 'transparent' }}>{icon}</div>;
         return i === 2 ? <Link key={i} href="/sber-dashboard/" style={{ textDecoration: 'none' }}>{el}</Link> : <div key={i}>{el}</div>;
       })}
       <div style={{ flex: 1 }}/>
-      <div style={{ width: 44, height: 44, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#E3E3E3' }}>{NAV_ICONS[6]}</div>
+      <div style={{ width: 44, height: 44, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: T.textMuted }}>{NAV_ICONS[6]}</div>
     </div>
   );
 }
@@ -547,59 +605,70 @@ const SELF = EMPLOYEES[0];
 export default function UserV3Page() {
   const [view, setView]         = useState<ViewMode>('self');
   const [selected, setSelected] = useState<Employee | null>(null);
+  const [dark, setDark]         = useState(true);
+  const T = dark ? DARK_T : LIGHT_T;
 
-  function handleSelectEmployee(emp: Employee) {
-    setSelected(emp);
-  }
-
-  function handleTabChange(v: ViewMode) {
-    setView(v);
-    setSelected(null);
-  }
+  function handleSelectEmployee(emp: Employee) { setSelected(emp); }
+  function handleTabChange(v: ViewMode) { setView(v); setSelected(null); }
+  function toggle() { setDark(d => !d); }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: T.bg }}>
-      <Sidebar/>
-      <main style={{ marginLeft: 92, flex: 1, padding: '28px 28px 40px', minWidth: 0 }}>
+    <ThemeCtx.Provider value={{ T, dark, toggle }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: T.bg, transition: 'background 200ms' }}>
+        <Sidebar/>
+        <main style={{ marginLeft: 92, flex: 1, padding: '28px 28px 40px', minWidth: 0 }}>
 
-        {/* Хлебные крошки */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
-          <Link href="/sber-dashboard/" style={{ textDecoration: 'none' }}>
-            <span style={{ fontSize: 12, color: T.textDim, fontFamily: 'var(--font-inter)', cursor: 'pointer' }}>Case Management Online</span>
-          </Link>
-          <span style={{ fontSize: 12, color: T.textDim }}>/</span>
-          <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>Продуктивность</span>
-        </div>
+          {/* Хлебные крошки + переключатель темы */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
+            <Link href="/sber-dashboard/" style={{ textDecoration: 'none' }}>
+              <span style={{ fontSize: 12, color: T.textDim, fontFamily: 'var(--font-inter)', cursor: 'pointer' }}>Case Management Online</span>
+            </Link>
+            <span style={{ fontSize: 12, color: T.textDim }}>/</span>
+            <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>Продуктивность</span>
+            <div style={{ flex: 1 }}/>
+            <button
+              onClick={toggle}
+              title={dark ? 'Светлая тема' : 'Тёмная тема'}
+              style={{
+                width: 36, height: 36, borderRadius: 999,
+                border: `1px solid ${T.border}`,
+                background: T.btn, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: T.textMuted, transition: 'background 200ms, border-color 200ms',
+              }}
+            >
+              {dark
+                ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              }
+            </button>
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900, margin: '0 auto', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900, margin: '0 auto', width: '100%' }}>
+            <TabSwitcher view={view} onChange={handleTabChange}/>
 
-          {/* Переключатель */}
-          <TabSwitcher view={view} onChange={handleTabChange}/>
+            {view === 'self' && <ProfileView emp={SELF} isSelf/>}
 
-          {/* Вид: по себе */}
-          {view === 'self' && <ProfileView emp={SELF} isSelf/>}
+            {view === 'team' && !selected && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {EMPLOYEES.map(emp => (
+                  <EmployeeCard key={emp.id} emp={emp} onSelect={handleSelectEmployee}/>
+                ))}
+              </div>
+            )}
 
-          {/* Вид: по сотрудникам — список или drill-down */}
-          {view === 'team' && !selected && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {EMPLOYEES.map(emp => (
-                <EmployeeCard key={emp.id} emp={emp} onSelect={handleSelectEmployee}/>
-              ))}
-            </div>
-          )}
-
-          {view === 'team' && selected && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <button onClick={() => setSelected(null)} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: T.textDim, fontSize: 12, fontFamily: 'var(--font-inter)', padding: 0 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M15 18l-6-6 6-6"/></svg>
-                К списку сотрудников
-              </button>
-              <ProfileView emp={selected}/>
-            </div>
-          )}
-
-        </div>
-      </main>
-    </div>
+            {view === 'team' && selected && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <button onClick={() => setSelected(null)} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: T.textDim, fontSize: 12, fontFamily: 'var(--font-inter)', padding: 0 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M15 18l-6-6 6-6"/></svg>
+                  К списку сотрудников
+                </button>
+                <ProfileView emp={selected}/>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </ThemeCtx.Provider>
   );
 }
