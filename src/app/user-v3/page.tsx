@@ -254,9 +254,11 @@ function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: st
   return (
     <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-        {QTR_MONTHS.map((m, i) => (
-          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} gradFrom={gradFrom} gradTo={gradTo} animDelay={i * 80} size={86}/>
-        ))}
+        {QTR_MONTHS.map((m, i) => {
+          const mPct  = m.fact / m.plan;
+          const mGrad = pctGrad(mPct, T);
+          return <MonthCircle key={m.label} label={m.short} pct={mPct} gradFrom={mGrad.from} gradTo={mGrad.to} animDelay={i * 80} size={86}/>;
+        })}
       </div>
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 13, minWidth: 0 }}>
