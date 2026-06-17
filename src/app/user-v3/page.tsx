@@ -380,7 +380,8 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
   const { T, dark } = useTheme();
   const ready = useReady(120);
   const R = size * 0.34; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
-  const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct, T);
+  const clamped = Math.min(pct, 1);
+  const circ = 2 * Math.PI * R; const arc = clamped * circ; const c = pctColor(pct, T);
   const gradId = `mr-${gradFrom.slice(1)}-${gradTo.slice(1)}`;
   const filtId = `mf-${gradFrom.slice(1)}`;
   return (
@@ -400,7 +401,7 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
           style={{ strokeDasharray: `${arc.toFixed(2)} ${(circ-arc).toFixed(2)}`, strokeDashoffset: ready ? 0 : circ, transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none', transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px` }}
         />
       )}
-      <text x={CX} y={CY + 4} textAnchor="middle" fill={c} fontSize={size * 0.19} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(pct)}</text>
+      <text x={CX} y={CY + 4} textAnchor="middle" fill={c} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
     </svg>
   );
 }
@@ -458,7 +459,7 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
           { label: 'С нач. кв.', pct: qtrPct, grad: qtrGrad },
         ].map(row => (
           <div key={row.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <MiniRing pct={row.pct} gradFrom={row.grad.from} gradTo={row.grad.to} size={88}/>
+            <MiniRing pct={row.pct} gradFrom={row.grad.from} gradTo={row.grad.to} size={120}/>
             <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
           </div>
         ))}
