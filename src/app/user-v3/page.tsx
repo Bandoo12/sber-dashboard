@@ -546,10 +546,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
                 }
               </span>
               <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
-                осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дн.</strong> / {WD_REMAINING} раб.
-              </span>
-              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
-                ср. {fmtN(avgPerDay)} мин/день
+                осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дней</strong>
               </span>
             </div>
           </div>
@@ -566,7 +563,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
           title="Задачи на сегодня" dateLabel={TODAY_DISP}
-          note={`База ${BASE_PLAN} мин`}
+          note={`План ${BASE_PLAN} мин`}
           gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from}
           gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to}
           backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
@@ -575,7 +572,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
           title={`Факт с 21.03 по ${TODAY_DISP}`} dateLabel="С начала квартала"
-          note={`план ${QTR_ELAPSED_WD} раб. дн. × ${BASE_PLAN} мин`}
+          note={`${fmtN(QTR_PLAN_TO_DATE)} мин`}
           gradFrom={qtrGrad.from} gradTo={qtrGrad.to}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks}/>}
         />
