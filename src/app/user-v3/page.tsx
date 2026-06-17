@@ -524,16 +524,19 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)', marginBottom: 5 }}>{emp.name}</div>
             {/* Дни до конца квартала + прогноз */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
-                {quarter.label} · осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дн.</strong> / {WD_REMAINING} раб.
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span style={{
                 fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-inter)',
                 color: onTrack ? T.greenAct : T.red,
-                display: 'flex', alignItems: 'center', gap: 3,
+                background: onTrack ? `rgba(0,178,75,0.12)` : `rgba(220,53,53,0.12)`,
+                border: `1px solid ${onTrack ? 'rgba(0,178,75,0.3)' : 'rgba(220,53,53,0.3)'}`,
+                borderRadius: 999, padding: '2px 9px',
+                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
               }}>
                 {onTrack ? '✓ успеваем' : '✗ не успеваем'}
+              </span>
+              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
+                осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дн.</strong> / {WD_REMAINING} раб.
               </span>
               <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
                 ср. {fmtN(avgPerDay)} мин/день
