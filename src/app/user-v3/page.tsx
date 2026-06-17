@@ -538,7 +538,10 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
                 borderRadius: 999, padding: '2px 9px',
                 display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
               }}>
-                {onTrack ? '✓ успеваем' : '✗ не успеваем'}
+                {onTrack
+                  ? '✓ успеваем'
+                  : <><svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg> не успеваем</>
+                }
               </span>
               <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
                 осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дн.</strong> / {WD_REMAINING} раб.
