@@ -301,7 +301,8 @@ interface RingProps {
   gradFrom: string; gradTo: string; backContent: React.ReactNode;
 }
 function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gradTo, backContent }: RingProps) {
-  const [hovered, setHovered] = useState(false);
+  const [flipped, setFlipped] = useState(false);
+  const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
   const ready    = useReady(100);
   const animFact = useCount(fact);
@@ -321,15 +322,19 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
     ? `linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 42%, rgba(255,255,255,0.02) 100%)`
     : `linear-gradient(145deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.02) 60%, ${T.surface} 100%)`;
   return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
-      flex: 1, borderRadius: 28,
-      border: hovered ? `1px solid rgba(${rgb},0.45)` : `1px solid ${T.border}`,
-      background: cardBg,
-      overflow: 'hidden', perspective: 900, transition: 'border-color 150ms ease',
-    }}>
+    <div
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      onClick={() => setFlipped(f => !f)}
+      style={{
+        flex: 1, borderRadius: 28, cursor: 'pointer',
+        border: hov ? `1px solid rgba(${rgb},0.45)` : `1px solid ${T.border}`,
+        background: cardBg,
+        overflow: 'hidden', perspective: 900, transition: 'border-color 150ms ease',
+      }}
+    >
       <div style={{
         position: 'relative', width: '100%', height: '100%', transformStyle: 'preserve-3d',
-        transform: hovered ? 'rotateY(180deg)' : 'rotateY(0deg)',
+        transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
         transition: 'transform 650ms cubic-bezier(0.45,0,0.15,1)',
       }}>
         {/* ЛИЦО */}
@@ -367,7 +372,7 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
           </div>
         </div>
         {/* ОБОРОТ */}
-        <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', padding: '24px 24px 20px', pointerEvents: hovered ? 'auto' : 'none' }}>
+        <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', padding: '24px 24px 20px', pointerEvents: flipped ? 'auto' : 'none' }}>
           {backContent}
         </div>
       </div>
