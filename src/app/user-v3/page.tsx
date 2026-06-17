@@ -50,12 +50,14 @@ function useTheme() { return useContext(ThemeCtx); }
 
 /* ── TYPES ── */
 type TaskData = { label: string; count: number; totalMin: number };
+type QtrMonth = { label: string; short: string; fact: number; plan: number };
 type Employee = {
   id: string; name: string; initials: string;
   gradFrom: string; gradTo: string;
   todayFact: number; todayPlan: number;
   qtrFact: number; qtrPlan: number;
   todayTasks: TaskData[]; qtrTasks: TaskData[];
+  months: QtrMonth[];
 };
 
 /* ── КВАРТАЛЬНЫЕ КОНСТАНТЫ ── */
@@ -75,24 +77,33 @@ const TODAY_DISP  = '05.06.26';
 const quarter     = getQuarter(TODAY_ISO);
 
 const BASE_PLAN        = 430;   // мин/день
-const QTR_WD           = 55;   // всего раб. дней в квартале
+const QTR_WD_TOTAL     = 65;   // всего раб. дней в квартале (Мар:7+Апр:22+Май:21+Июн:15)
+const QTR_WD_ELAPSED   = 55;   // раб. дней прошло (Мар:7+Апр:22+Май:21+Июн:5)
+const WD_REMAINING     = 10;   // раб. дней осталось (Июн 8–19)
 const QTR_ELAPSED_DAYS = 77;   // календарных дней прошло
-const QTR_ELAPSED_WD   = 46;   // раб. дней прошло (≈ QTR_WD * elapsed/total)
-const WD_REMAINING     = QTR_WD - QTR_ELAPSED_WD;   // 9 раб. дней осталось
-const DAYS_REMAINING   = quarter.totalDays - QTR_ELAPSED_DAYS; // 15 кал. дней осталось
+const DAYS_REMAINING   = quarter.totalDays - QTR_ELAPSED_DAYS; // 15 кал. дней
 const QTR_POS          = QTR_ELAPSED_DAYS / quarter.totalDays; // 0.837
-const QTR_PLAN_TARGET  = 0.75;
 
-// план ДО ТЕКУЩЕГО ДНЯ (сравниваем с тем, что сотрудник должен был сделать к сегодняшнему дню)
-const QTR_PLAN_TO_DATE = QTR_ELAPSED_WD * BASE_PLAN; // 19 780 мин
-const QTR_FULL_PLAN    = QTR_WD * BASE_PLAN;          // 23 650 мин
+// план-на-текущую-дату: 55 раб. дн × 430 мин = 23 650 мин
+const QTR_PLAN_TO_DATE = QTR_WD_ELAPSED * BASE_PLAN; // 23 650 мин
+const QTR_FULL_PLAN    = QTR_WD_TOTAL   * BASE_PLAN; // 27 950 мин
 
-const QTR_MONTHS = [
-  { label: 'Март (с 21)', short: 'Мар', fact: 2408, plan: 3010 },
-  { label: 'Апрель',      short: 'Апр', fact: 4354, plan: 9460 },
-  { label: 'Май',         short: 'Май', fact: 4515, plan: 9030 },
-  { label: 'Июнь (1–5)', short: 'Июн', fact: 548,  plan: 2150 },
+// Шаблоны месяцев (только плановые цифры)
+const QTR_MONTH_PLANS = [
+  { label: 'Март (с 21)', short: 'Мар', plan: 3010 },
+  { label: 'Апрель',      short: 'Апр', plan: 9460 },
+  { label: 'Май',         short: 'Май', plan: 9030 },
+  { label: 'Июнь (1–5)', short: 'Июн', plan: 2150 },
 ];
+// Распределяем qtrFact по месяцам пропорционально их планам
+function makeMonths(qtrFact: number): QtrMonth[] {
+  const totalPlan = QTR_MONTH_PLANS.reduce((s, m) => s + m.plan, 0);
+  return QTR_MONTH_PLANS.map(m => ({
+    label: m.label, short: m.short,
+    fact: Math.round(qtrFact * (m.plan / totalPlan)),
+    plan: m.plan,
+  }));
+}
 
 /* ── СОТРУДНИКИ ── */
 function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]; qtrTasks: TaskData[] } {
@@ -110,14 +121,14 @@ function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]
   return { todayTasks: build(todayFact), qtrTasks: build(qtrFact) };
 }
 
-// qtrFact vs QTR_PLAN_TO_DATE (19 780 мин) — данные согласованы с todayFact
+// qtrFact vs QTR_PLAN_TO_DATE (23 650 мин) — ≥ плана = успевает
 const EMPLOYEES: Employee[] = [
-  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact: 286, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(286, 12800) },
-  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 18000, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(396, 18000) },
-  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 19900, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(430, 19900) },
-  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(189,  8500) },
-  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 14500, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(314, 14500) },
-  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 20100, qtrPlan: QTR_PLAN_TO_DATE, ...makeTasks(430, 20100) },
+  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact: 286, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), ...makeTasks(286, 12800) },
+  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 20400, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(20400), ...makeTasks(396, 20400) },
+  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 24000, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24000), ...makeTasks(430, 24000) },
+  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), ...makeTasks(189,  8500) },
+  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 15800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(15800), ...makeTasks(314, 15800) },
+  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 24200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24200), ...makeTasks(430, 24200) },
 ];
 
 /* ── HELPERS ── */
@@ -132,10 +143,9 @@ function pctGrad(p: number, T: Tokens) {
 function fmtPct(p: number) { const v = p * 100; return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`; }
 function fmtN(n: number)   { return n.toLocaleString('ru-RU'); }
 
-// Прогноз: успеет ли сотрудник выполнить полный план квартала при текущей средней
+// Сотрудник успевает, если накопленный факт ≥ план на текущую дату (23 650 мин)
 function isOnTrack(qtrFact: number) {
-  const projected = qtrFact + (qtrFact / QTR_ELAPSED_WD) * WD_REMAINING;
-  return projected >= QTR_FULL_PLAN;
+  return qtrFact >= QTR_PLAN_TO_DATE;
 }
 
 /* ── HOOKS ── */
@@ -247,14 +257,14 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
 }
 
 /* ── ОБОРОТ «КВАРТАЛ» ── */
-function MonthlyBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
+function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gradTo: string; tasks: TaskData[]; months: QtrMonth[] }) {
   const { T } = useTheme();
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
   return (
     <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-        {QTR_MONTHS.map((m, i) => {
+        {months.map((m, i) => {
           const mPct  = m.fact / m.plan;
           const mGrad = pctGrad(mPct, T);
           return <MonthCircle key={m.label} label={m.short} pct={mPct} gradFrom={mGrad.from} gradTo={mGrad.to} animDelay={i * 80} size={86}/>;
@@ -344,7 +354,6 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
           <div style={{ alignSelf: 'flex-start', marginBottom: 16 }}>
             <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{title}</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{dateLabel}</div>
-            {note && <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginTop: 3 }}>{note}</div>}
           </div>
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
             <defs>
@@ -478,7 +487,7 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
 /* ── ТАБ-ПЕРЕКЛЮЧАТЕЛЬ ── */
 type ViewMode = 'self' | 'team';
 function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
-  const { T } = useTheme();
+  const { T, dark } = useTheme();
   const tabs: { id: ViewMode; label: string }[] = [
     { id: 'self', label: 'По себе' },
     { id: 'team', label: 'По сотрудникам' },
@@ -490,10 +499,11 @@ function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMod
         return (
           <button key={tab.id} onClick={() => onChange(tab.id)} style={{
             padding: '7px 18px', borderRadius: 999, border: 'none', cursor: 'pointer',
-            background: active ? T.btn : 'transparent',
+            background: active ? (dark ? T.btn : T.surface) : 'transparent',
+            boxShadow: active && !dark ? '0 1px 6px rgba(0,0,0,0.16)' : 'none',
             color: active ? T.text : T.textMuted,
             fontSize: 13, fontWeight: active ? 600 : 400, fontFamily: 'var(--font-inter)',
-            transition: 'background 150ms, color 150ms',
+            transition: 'background 150ms, color 150ms, box-shadow 150ms',
           }}>{tab.label}</button>
         );
       })}
@@ -503,10 +513,10 @@ function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMod
 
 /* ── ПРОФИЛЬ СОТРУДНИКА ── */
 function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
-  const { T } = useTheme();
+  const { T, dark } = useTheme();
   const pctRgbVal = pctRgb(emp.todayFact / emp.todayPlan);
   const onTrack   = isOnTrack(emp.qtrFact);
-  const avgPerDay = Math.round(emp.qtrFact / QTR_ELAPSED_WD);
+  const avgPerDay = Math.round(emp.qtrFact / QTR_WD_ELAPSED);
 
   // Квартальный ринг: цвет по проценту план-на-сегодня
   const qtrPct  = emp.qtrFact / QTR_PLAN_TO_DATE;
@@ -516,7 +526,9 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Шапка — без прогресс-бара */}
       <div style={{
-        background: `linear-gradient(145deg, rgba(${pctRgbVal},0.08) 0%, rgba(128,128,128,0.04) 60%, rgba(128,128,128,0.01) 100%)`,
+        background: dark
+          ? `linear-gradient(145deg, rgba(${pctRgbVal},0.14) 0%, rgba(128,128,128,0.04) 60%, rgba(128,128,128,0.01) 100%)`
+          : `linear-gradient(145deg, rgba(${pctRgbVal},0.20) 0%, rgba(${pctRgbVal},0.07) 55%, ${T.surface} 100%)`,
         borderRadius: 24, border: `1px solid rgba(${pctRgbVal},0.18)`,
         padding: '18px 22px',
       }}>
@@ -574,7 +586,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           title={`Факт с 21.03 по ${TODAY_DISP}`} dateLabel="С начала квартала"
           note={`${fmtN(QTR_PLAN_TO_DATE)} мин`}
           gradFrom={qtrGrad.from} gradTo={qtrGrad.to}
-          backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks}/>}
+          backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
       </div>
     </div>
