@@ -526,7 +526,7 @@ function TabSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMod
 /* ── ПРОФИЛЬ СОТРУДНИКА ── */
 function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
   const { T, dark } = useTheme();
-  const pctRgbVal = pctRgb(emp.todayFact / emp.todayPlan);
+  const pctRgbVal = '0,178,75'; // фиксированный зелёный для шапки
   const onTrack   = isOnTrack(emp.qtrFact);
   const avgPerDay = Math.round(emp.qtrFact / QTR_WD_ELAPSED);
 
