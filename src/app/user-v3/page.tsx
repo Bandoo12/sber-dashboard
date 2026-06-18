@@ -257,8 +257,8 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
             stroke={`url(#mc-v3-${label})`} strokeWidth={SW} strokeLinecap="round"
             filter={`url(#mg-v3-${label})`}
             style={{
-              strokeDasharray: `${arc.toFixed(2)} ${(circ - arc).toFixed(2)}`,
-              strokeDashoffset: ready ? 0 : circ,
+              strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
+              strokeDashoffset: ready ? circ - arc : circ,
               transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none',
               transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px`,
             }}
@@ -340,8 +340,8 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
   const R = 88; const CX = 120; const CY = 120; const SW = 20;
   const circ = 2 * Math.PI * R; const arc = pct * circ;
   const arcStyle: React.CSSProperties = {
-    strokeDasharray: `${arc.toFixed(2)} ${(circ - arc).toFixed(2)}`,
-    strokeDashoffset: ready ? 0 : circ,
+    strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
+    strokeDashoffset: ready ? circ - arc : circ,
     transition: ready ? 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)' : 'none',
     transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px`,
   };
@@ -434,7 +434,7 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
       {pct > 0 && (
         <circle cx={CX} cy={CY} r={R} fill="none" stroke={`url(#${gradId})`} strokeWidth={SW} strokeLinecap="round"
           filter={`url(#${filtId})`}
-          style={{ strokeDasharray: `${arc.toFixed(2)} ${(circ-arc).toFixed(2)}`, strokeDashoffset: ready ? 0 : circ, transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none', transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px` }}
+          style={{ strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`, strokeDashoffset: ready ? circ - arc : circ, transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none', transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px` }}
         />
       )}
       <text x={CX} y={CY + 4} textAnchor="middle" fill={glowC} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
