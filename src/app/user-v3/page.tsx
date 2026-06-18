@@ -242,7 +242,7 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ overflow: 'visible' }}>
         <defs>
-          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1={CX} y1={CY - R} x2={CX} y2={CY + R}>
+          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1={CX + R} y1={CY} x2={CX - R} y2={CY}>
             <stop offset="0%"   stopColor="#DC3535"/>
             <stop offset="50%"  stopColor="#D9A600"/>
             <stop offset="100%" stopColor="#00B24B"/>
@@ -372,7 +372,7 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
           </div>
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
             <defs>
-              <linearGradient id={`ag-${id}`} gradientUnits="userSpaceOnUse" x1={CX} y1={CY - R} x2={CX} y2={CY + R}>
+              <linearGradient id={`ag-${id}`} gradientUnits="userSpaceOnUse" x1={CX + R} y1={CY} x2={CX - R} y2={CY}>
                 <stop offset="0%"   stopColor="#DC3535"/>
                 <stop offset="50%"  stopColor="#D9A600"/>
                 <stop offset="100%" stopColor="#00B24B"/>
@@ -421,7 +421,7 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <defs>
-        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1={CX} y1={CY - R} x2={CX} y2={CY + R}>
+        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1={CX + R} y1={CY} x2={CX - R} y2={CY}>
           <stop offset="0%"   stopColor="#DC3535"/>
           <stop offset="50%"  stopColor="#D9A600"/>
           <stop offset="100%" stopColor="#00B24B"/>
