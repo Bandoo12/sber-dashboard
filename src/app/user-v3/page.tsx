@@ -123,7 +123,7 @@ function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]
 
 // qtrFact vs QTR_PLAN_TO_DATE (23 650 мин) — ≥ плана = успевает
 const EMPLOYEES: Employee[] = [
-  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact: 286, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), ...makeTasks(286, 12800) },
+  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact:  65, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), ...makeTasks( 65, 12800) },
   { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 20400, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(20400), ...makeTasks(396, 20400) },
   { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 24000, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24000), ...makeTasks(430, 24000) },
   { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), ...makeTasks(189,  8500) },
@@ -132,14 +132,26 @@ const EMPLOYEES: Employee[] = [
 ];
 
 /* ── HELPERS ── */
-function pctColor(p: number, T: Tokens) { return p >= 0.66 ? T.greenAct : p >= 0.33 ? T.yellow : T.red; }
-function pctRgb(p: number)  { return p >= 0.66 ? '0,178,75' : p >= 0.33 ? '217,166,0' : '220,53,53'; }
-// Градиент по проценту: красный < 33%, жёлтый < 66%, зелёный ≥ 66%
-function pctGrad(p: number, T: Tokens) {
-  if (p < 0.33) return { from: T.red,    to: '#FF8070' };
-  if (p < 0.66) return { from: T.yellow, to: '#FFD060' };
-  return              { from: T.greenAct, to: T.green  };
+function pctRgb(p: number) { return p >= 0.66 ? '0,178,75' : p >= 0.33 ? '217,166,0' : '220,53,53'; }
+// Линейная интерполяция двух hex-цветов
+function lerpHex(a: string, b: string, t: number): string {
+  const h = (s: string) => [parseInt(s.slice(1,3),16), parseInt(s.slice(3,5),16), parseInt(s.slice(5,7),16)];
+  const [ar,ag,ab]=h(a); const [br,bg,bb]=h(b);
+  return `#${[ar+(br-ar)*t,ag+(bg-ag)*t,ab+(bb-ab)*t].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}`;
 }
+// Плавный цвет текста: красный→жёлтый→зелёный
+function smoothColor(p: number): string {
+  const c=Math.min(Math.max(p,0),1);
+  return c<=0.5 ? lerpHex('#DC3535','#D9A600',c*2) : lerpHex('#D9A600','#00B24B',(c-0.5)*2);
+}
+// Плавный градиент кольца
+function smoothGrad(p: number) {
+  const c=Math.min(Math.max(p,0),1);
+  if (c<=0.5) { const t=c*2; return { from: lerpHex('#DC3535','#D9A600',t), to: lerpHex('#FF8070','#FFD060',t) }; }
+  const t=(c-0.5)*2; return { from: lerpHex('#D9A600','#00B24B',t), to: lerpHex('#FFD060','#00D95B',t) };
+}
+function pctColor(p: number, _T?: Tokens) { return smoothColor(p); }
+function pctGrad(p: number,  _T?: Tokens) { return smoothGrad(p); }
 function fmtPct(p: number) { const v = p * 100; return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`; }
 function fmtN(n: number)   { return n.toLocaleString('ru-RU'); }
 
@@ -542,21 +554,8 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           }}>{emp.initials}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)', marginBottom: 5 }}>{emp.name}</div>
-            {/* Дни до конца квартала + прогноз */}
+            {/* Дни до конца квартала */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{
-                fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-inter)',
-                color: onTrack ? T.greenAct : T.red,
-                background: onTrack ? `rgba(0,178,75,0.12)` : `rgba(220,53,53,0.12)`,
-                border: `1px solid ${onTrack ? 'rgba(0,178,75,0.3)' : 'rgba(220,53,53,0.3)'}`,
-                borderRadius: 999, padding: '2px 9px',
-                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
-              }}>
-                {onTrack
-                  ? '✓ успеваем'
-                  : <><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg> не успеваем</>
-                }
-              </span>
               <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
                 осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дней</strong>
               </span>
@@ -574,7 +573,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
-          title="Задачи на сегодня" dateLabel={TODAY_DISP}
+          title="Среднее за сегодня" dateLabel={TODAY_DISP}
           note={`План ${BASE_PLAN} мин`}
           gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from}
           gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to}
@@ -583,7 +582,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
-          title={`Факт с 21.03 по ${TODAY_DISP}`} dateLabel="С начала квартала"
+          title="Среднее за квартал" dateLabel="С начала квартала"
           note={`${fmtN(QTR_PLAN_TO_DATE)} мин`}
           gradFrom={qtrGrad.from} gradTo={qtrGrad.to}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
