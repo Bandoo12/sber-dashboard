@@ -242,11 +242,13 @@ function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ overflow: 'visible' }}>
         <defs>
-          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={size} y2={size}>
-            <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
+          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1={CX} y1={CY - R} x2={CX} y2={CY + R}>
+            <stop offset="0%"   stopColor="#DC3535"/>
+            <stop offset="50%"  stopColor="#D9A600"/>
+            <stop offset="100%" stopColor="#00B24B"/>
           </linearGradient>
           <filter id={`mg-v3-${label}`} x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={gradFrom} floodOpacity={dark ? '0.5' : '0.2'}/>
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={smoothColor(pct)} floodOpacity={dark ? '0.5' : '0.2'}/>
           </filter>
         </defs>
         <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
@@ -370,14 +372,16 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
           </div>
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
             <defs>
-              <linearGradient id={`ag-${id}`} gradientUnits="userSpaceOnUse" x1={CX-R} y1={CY-R} x2={CX+R} y2={CY+R}>
-                <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
+              <linearGradient id={`ag-${id}`} gradientUnits="userSpaceOnUse" x1={CX} y1={CY - R} x2={CX} y2={CY + R}>
+                <stop offset="0%"   stopColor="#DC3535"/>
+                <stop offset="50%"  stopColor="#D9A600"/>
+                <stop offset="100%" stopColor="#00B24B"/>
               </linearGradient>
               <linearGradient id={`tg-${id}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
+                <stop offset="0%" stopColor="#DC3535"/><stop offset="100%" stopColor={smoothColor(pct)}/>
               </linearGradient>
               <filter id={`gl-${id}`} x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor={gradFrom} floodOpacity={dark ? '0.5' : '0.2'}/>
+                <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor={smoothColor(pct)} floodOpacity={dark ? '0.5' : '0.2'}/>
               </filter>
             </defs>
             <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
@@ -410,17 +414,20 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
   const ready = useReady(120);
   const R = size * 0.34; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
   const clamped = Math.min(pct, 1);
-  const circ = 2 * Math.PI * R; const arc = clamped * circ; const c = pctColor(pct, T);
-  const gradId = `mr-${gradFrom.slice(1)}-${gradTo.slice(1)}`;
-  const filtId = `mf-${gradFrom.slice(1)}`;
+  const circ = 2 * Math.PI * R; const arc = clamped * circ;
+  const glowC = smoothColor(clamped);
+  const gradId = `mr3-${size}`;
+  const filtId = `mf3-${Math.round(clamped * 100)}`;
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <defs>
-        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={size} y2={size}>
-          <stop offset="0%" stopColor={gradFrom}/><stop offset="100%" stopColor={gradTo}/>
+        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1={CX} y1={CY - R} x2={CX} y2={CY + R}>
+          <stop offset="0%"   stopColor="#DC3535"/>
+          <stop offset="50%"  stopColor="#D9A600"/>
+          <stop offset="100%" stopColor="#00B24B"/>
         </linearGradient>
         <filter id={filtId} x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={gradFrom} floodOpacity={dark ? '0.6' : '0.25'}/>
+          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={glowC} floodOpacity={dark ? '0.6' : '0.25'}/>
         </filter>
       </defs>
       <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
@@ -430,7 +437,7 @@ function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom:
           style={{ strokeDasharray: `${arc.toFixed(2)} ${(circ-arc).toFixed(2)}`, strokeDashoffset: ready ? 0 : circ, transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none', transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px` }}
         />
       )}
-      <text x={CX} y={CY + 4} textAnchor="middle" fill={c} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
+      <text x={CX} y={CY + 4} textAnchor="middle" fill={glowC} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
     </svg>
   );
 }
