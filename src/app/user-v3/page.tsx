@@ -54,6 +54,7 @@ type QtrMonth = { label: string; short: string; fact: number; plan: number };
 type Employee = {
   id: string; name: string; initials: string;
   gradFrom: string; gradTo: string;
+  avatar: string;
   todayFact: number; todayPlan: number;
   qtrFact: number; qtrPlan: number;
   todayTasks: TaskData[]; qtrTasks: TaskData[];
@@ -123,12 +124,12 @@ function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]
 
 // qtrFact vs QTR_PLAN_TO_DATE (23 650 мин) — ≥ плана = успевает
 const EMPLOYEES: Employee[] = [
-  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact:  65, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), ...makeTasks( 65, 12800) },
-  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 20400, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(20400), ...makeTasks(396, 20400) },
-  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 24000, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24000), ...makeTasks(430, 24000) },
-  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), ...makeTasks(189,  8500) },
-  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 15800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(15800), ...makeTasks(314, 15800) },
-  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 24200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24200), ...makeTasks(430, 24200) },
+  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact:  65, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), ...makeTasks( 65, 12800) },
+  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', avatar: 'https://randomuser.me/api/portraits/men/32.jpg',   gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 20400, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(20400), ...makeTasks(396, 20400) },
+  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', avatar: 'https://randomuser.me/api/portraits/women/17.jpg', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 24000, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24000), ...makeTasks(430, 24000) },
+  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', avatar: 'https://randomuser.me/api/portraits/men/58.jpg',   gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), ...makeTasks(189,  8500) },
+  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 15800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(15800), ...makeTasks(314, 15800) },
+  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', avatar: 'https://randomuser.me/api/portraits/men/11.jpg',   gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 24200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24200), ...makeTasks(430, 24200) },
 ];
 
 /* ── HELPERS ── */
@@ -468,7 +469,10 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-manrope)',
           boxShadow: `0 0 12px rgba(${rgb},0.3)`,
-        }}>{emp.initials}</div>
+          overflow: 'hidden',
+        }}>
+          <img src={emp.avatar} alt={emp.initials} width={38} height={38} style={{ objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display='none'; }}/>
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: 'var(--font-manrope)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {emp.name}
@@ -551,7 +555,10 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-manrope)',
             boxShadow: `0 0 18px rgba(${pctRgbVal},0.3)`,
-          }}>{emp.initials}</div>
+            overflow: 'hidden',
+          }}>
+            <img src={emp.avatar} alt={emp.initials} width={50} height={50} style={{ objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display='none'; }}/>
+          </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)', marginBottom: 5 }}>{emp.name}</div>
             {/* Дни до конца квартала */}
