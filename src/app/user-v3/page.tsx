@@ -183,6 +183,54 @@ function useReady(delay = 80): boolean {
   return r;
 }
 
+/* ── СЕГМЕНТИРОВАННАЯ ДУГА (градиент точно по проценту) ── */
+function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900, n = 36 }: {
+  id: string; cx: number; cy: number; r: number; sw: number;
+  pct: number; dark: boolean; ready: boolean; duration?: number; n?: number;
+}) {
+  const clamped = Math.min(Math.max(pct, 0), 1);
+  const circ = 2 * Math.PI * r;
+  const arc  = clamped * circ;
+  const glowC = smoothColor(clamped);
+  return (
+    <>
+      <defs>
+        <clipPath id={`clip-${id}`}>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="white" strokeWidth={sw + 4}
+            style={{
+              strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
+              strokeDashoffset: ready ? circ - arc : circ,
+              transition: ready ? `stroke-dashoffset ${duration}ms cubic-bezier(0.22,1,0.36,1)` : 'none',
+              transform: 'rotate(-90deg)',
+              transformOrigin: `${cx}px ${cy}px`,
+            }}
+          />
+        </clipPath>
+        <filter id={`sf-${id}`} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="0" stdDeviation={sw * 0.45}
+            floodColor={glowC} floodOpacity={dark ? '0.55' : '0.22'}/>
+        </filter>
+      </defs>
+      {clamped > 0 && (
+        <g clipPath={`url(#clip-${id})`} filter={`url(#sf-${id})`}>
+          {Array.from({ length: n }, (_, i) => {
+            const a0 = -Math.PI / 2 + (i / n) * 2 * Math.PI;
+            const a1 = -Math.PI / 2 + ((i + 1) / n) * 2 * Math.PI;
+            const x1 = cx + r * Math.cos(a0); const y1 = cy + r * Math.sin(a0);
+            const x2 = cx + r * Math.cos(a1); const y2 = cy + r * Math.sin(a1);
+            return (
+              <path key={i}
+                d={`M ${x1.toFixed(3)} ${y1.toFixed(3)} A ${r} ${r} 0 0 1 ${x2.toFixed(3)} ${y2.toFixed(3)}`}
+                fill="none" stroke={smoothColor((i + 0.5) / n)} strokeWidth={sw} strokeLinecap="butt"
+              />
+            );
+          })}
+        </g>
+      )}
+    </>
+  );
+}
+
 /* ── ОБОРОТ «СЕГОДНЯ» ── */
 function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
   const { T } = useTheme();
@@ -230,40 +278,19 @@ function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: stri
 }
 
 /* ── КРУЖОК МЕСЯЦА ── */
-function MonthCircle({ label, pct, gradFrom, gradTo, animDelay, size = 80 }: {
-  label: string; pct: number; gradFrom: string; gradTo: string; animDelay: number; size?: number;
+function MonthCircle({ label, pct, animDelay, size = 80 }: {
+  label: string; pct: number; animDelay: number; size?: number;
 }) {
   const { T, dark } = useTheme();
   const ready = useReady(200 + animDelay);
   const R = size * 0.38; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
-  const circ = 2 * Math.PI * R; const arc = pct * circ; const c = pctColor(pct, T);
+  const c  = pctColor(pct, T);
   const fs = Math.round(size * 0.18);
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ overflow: 'visible' }}>
-        <defs>
-          <linearGradient id={`mc-v3-${label}`} gradientUnits="userSpaceOnUse" x1={CX + R} y1={CY} x2={CX - R} y2={CY}>
-            <stop offset="0%"   stopColor="#DC3535"/>
-            <stop offset="50%"  stopColor="#D9A600"/>
-            <stop offset="100%" stopColor="#00B24B"/>
-          </linearGradient>
-          <filter id={`mg-v3-${label}`} x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={smoothColor(pct)} floodOpacity={dark ? '0.5' : '0.2'}/>
-          </filter>
-        </defs>
         <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
-        {pct > 0 && (
-          <circle cx={CX} cy={CY} r={R} fill="none"
-            stroke={`url(#mc-v3-${label})`} strokeWidth={SW} strokeLinecap="round"
-            filter={`url(#mg-v3-${label})`}
-            style={{
-              strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
-              strokeDashoffset: ready ? circ - arc : circ,
-              transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none',
-              transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px`,
-            }}
-          />
-        )}
+        <SegmentedRingArc id={`mc-${label}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} n={36}/>
         <text x={CX} y={CY - 3} textAnchor="middle" fill={c} fontSize={fs} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(pct)}</text>
         <text x={CX} y={CY + fs * 0.85} textAnchor="middle" fill={T.textDim} fontSize={fs * 0.7} fontFamily="var(--font-inter)">{label}</text>
       </svg>
@@ -280,9 +307,8 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
     <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         {months.map((m, i) => {
-          const mPct  = m.fact / m.plan;
-          const mGrad = pctGrad(mPct, T);
-          return <MonthCircle key={m.label} label={m.short} pct={mPct} gradFrom={mGrad.from} gradTo={mGrad.to} animDelay={i * 80} size={86}/>;
+          const mPct = m.fact / m.plan;
+          return <MonthCircle key={m.label} label={m.short} pct={mPct} animDelay={i * 80} size={86}/>;
         })}
       </div>
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
@@ -325,9 +351,9 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
 interface RingProps {
   id: string; plan: number; fact: number;
   title: string; dateLabel: string; note?: string;
-  gradFrom: string; gradTo: string; backContent: React.ReactNode;
+  backContent: React.ReactNode;
 }
-function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gradTo, backContent }: RingProps) {
+function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent }: RingProps) {
   const [flipped, setFlipped] = useState(false);
   const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
@@ -336,15 +362,7 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
   const animPlan = useCount(plan);
   const pct  = plan > 0 ? Math.min(fact / plan, 1) : 0;
   const rgb  = pctRgb(pct);
-  const grad = pctGrad(pct, T);
   const R = 88; const CX = 120; const CY = 120; const SW = 20;
-  const circ = 2 * Math.PI * R; const arc = pct * circ;
-  const arcStyle: React.CSSProperties = {
-    strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
-    strokeDashoffset: ready ? circ - arc : circ,
-    transition: ready ? 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)' : 'none',
-    transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px`,
-  };
   const cardBg = dark
     ? `linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 42%, rgba(255,255,255,0.02) 100%)`
     : `linear-gradient(145deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.02) 60%, ${T.surface} 100%)`;
@@ -372,20 +390,12 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
           </div>
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
             <defs>
-              <linearGradient id={`ag-${id}`} gradientUnits="userSpaceOnUse" x1={CX + R} y1={CY} x2={CX - R} y2={CY}>
-                <stop offset="0%"   stopColor="#DC3535"/>
-                <stop offset="50%"  stopColor="#D9A600"/>
-                <stop offset="100%" stopColor="#00B24B"/>
-              </linearGradient>
               <linearGradient id={`tg-${id}`} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#DC3535"/><stop offset="100%" stopColor={smoothColor(pct)}/>
               </linearGradient>
-              <filter id={`gl-${id}`} x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor={smoothColor(pct)} floodOpacity={dark ? '0.5' : '0.2'}/>
-              </filter>
             </defs>
             <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
-            {pct > 0 && <circle cx={CX} cy={CY} r={R} fill="none" stroke={`url(#ag-${id})`} strokeWidth={SW} strokeLinecap="round" filter={`url(#gl-${id})`} style={arcStyle}/>}
+            <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
             <text x={CX} y={CY + 5} textAnchor="middle" fill={`url(#tg-${id})`} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
             <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>
           </svg>
@@ -409,34 +419,16 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, gradFrom, gr
 }
 
 /* ── МИНИ-КОЛЬЦО (цвет по проценту) ── */
-function MiniRing({ pct, gradFrom, gradTo, size = 64 }: { pct: number; gradFrom: string; gradTo: string; size?: number }) {
+function MiniRing({ id, pct, size = 64 }: { id: string; pct: number; size?: number }) {
   const { T, dark } = useTheme();
-  const ready = useReady(120);
+  const ready   = useReady(120);
   const R = size * 0.34; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
   const clamped = Math.min(pct, 1);
-  const circ = 2 * Math.PI * R; const arc = clamped * circ;
-  const glowC = smoothColor(clamped);
-  const gradId = `mr3-${size}`;
-  const filtId = `mf3-${Math.round(clamped * 100)}`;
+  const glowC   = smoothColor(clamped);
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
-      <defs>
-        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1={CX + R} y1={CY} x2={CX - R} y2={CY}>
-          <stop offset="0%"   stopColor="#DC3535"/>
-          <stop offset="50%"  stopColor="#D9A600"/>
-          <stop offset="100%" stopColor="#00B24B"/>
-        </linearGradient>
-        <filter id={filtId} x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={glowC} floodOpacity={dark ? '0.6' : '0.25'}/>
-        </filter>
-      </defs>
       <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
-      {pct > 0 && (
-        <circle cx={CX} cy={CY} r={R} fill="none" stroke={`url(#${gradId})`} strokeWidth={SW} strokeLinecap="round"
-          filter={`url(#${filtId})`}
-          style={{ strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`, strokeDashoffset: ready ? circ - arc : circ, transition: ready ? 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' : 'none', transform: 'rotate(-90deg)', transformOrigin: `${CX}px ${CY}px` }}
-        />
-      )}
+      <SegmentedRingArc id={id} cx={CX} cy={CY} r={R} sw={SW} pct={clamped} dark={dark} ready={ready} n={36}/>
       <text x={CX} y={CY + 4} textAnchor="middle" fill={glowC} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
     </svg>
   );
@@ -449,9 +441,6 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
   const todayPct = emp.todayFact / emp.todayPlan;
   const qtrPct   = emp.qtrFact   / emp.qtrPlan;
   const rgb = pctRgb(todayPct);
-  // Цвет кружков по проценту (красный/жёлтый/зелёный)
-  const todayGrad = pctGrad(todayPct, T);
-  const qtrGrad   = pctGrad(qtrPct, T);
   return (
     <div
       onClick={() => onSelect(emp)}
@@ -494,11 +483,11 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
       {/* Два кружка: цвет по %  */}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'space-around' }}>
         {[
-          { label: 'Сегодня', pct: todayPct, grad: todayGrad },
-          { label: 'С нач. кв.', pct: qtrPct, grad: qtrGrad },
+          { label: 'Сегодня', pct: todayPct },
+          { label: 'С нач. кв.', pct: qtrPct },
         ].map(row => (
           <div key={row.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <MiniRing pct={row.pct} gradFrom={row.grad.from} gradTo={row.grad.to} size={120}/>
+            <MiniRing id={`${emp.id}-${row.label}`} pct={row.pct} size={120}/>
             <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
           </div>
         ))}
@@ -589,8 +578,6 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           plan={emp.todayPlan} fact={emp.todayFact}
           title="Среднее за сегодня" dateLabel={TODAY_DISP}
           note={`План ${BASE_PLAN} мин`}
-          gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from}
-          gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to}
           backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
         />
         <ProductivityRing
@@ -598,7 +585,6 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
           title="Среднее за квартал" dateLabel="С начала квартала"
           note={`${fmtN(QTR_PLAN_TO_DATE)} мин`}
-          gradFrom={qtrGrad.from} gradTo={qtrGrad.to}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
       </div>
