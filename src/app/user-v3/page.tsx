@@ -583,7 +583,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
-          title="Среднее за квартал" dateLabel="С начала квартала"
+          title="Среднее за квартал" dateLabel="С 21 марта"
           note={`${fmtN(QTR_PLAN_TO_DATE)} мин`}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
