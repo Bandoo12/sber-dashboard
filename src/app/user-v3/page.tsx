@@ -369,25 +369,27 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent 
         transition: 'transform 650ms cubic-bezier(0.45,0,0.15,1)',
       }}>
         {/* ЛИЦО */}
-        <div style={{ padding: '24px 24px 20px', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ alignSelf: 'flex-start', marginBottom: 16 }}>
+        <div style={{ padding: '24px 24px 20px', height: '100%', boxSizing: 'border-box', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ alignSelf: 'flex-start' }}>
             <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{title}</div>
             {dateLabel && <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{dateLabel}</div>}
           </div>
-          <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
-            <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
-            <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
-            <text x={CX} y={CY + 5} textAnchor="middle" fill={ringTheme(pct).to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
-            <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>
-          </svg>
-          <div style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%' }}>
-            {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: 'План', val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
-              <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
-                <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)', letterSpacing: '-0.02em', lineHeight: 1 }}>{fmtN(val)}</div>
-                <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginTop: 1 }}>мин</div>
-              </div>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
+              <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
+              <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
+              <text x={CX} y={CY + 5} textAnchor="middle" fill={ringTheme(pct).to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
+              <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>
+            </svg>
+            <div style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%' }}>
+              {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: 'План', val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
+                <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
+                  <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)', letterSpacing: '-0.02em', lineHeight: 1 }}>{fmtN(val)}</div>
+                  <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginTop: 1 }}>мин</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         {/* ОБОРОТ */}
