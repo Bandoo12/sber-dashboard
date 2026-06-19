@@ -135,9 +135,9 @@ const EMPLOYEES: Employee[] = [
 /* ── HELPERS ── */
 // 3 фиксированные темы: зелёный / оранжевый / красный
 function ringTheme(p: number): { from: string; to: string; rgb: string } {
-  if (p >= 0.66) return { from: '#005C22', to: '#50E880', rgb: '0,92,34'    }; // тёмно-зелёный → ярко-светлый
-  if (p >= 0.33) return { from: '#8B3A00', to: '#FFB84A', rgb: '139,58,0'   }; // тёмно-оранжевый → светлый
-  return           { from: '#8B0000',  to: '#FF7070', rgb: '139,0,0'         }; // тёмно-красный → светлый
+  if (p >= 0.66) return { from: '#1A6C38', to: '#50E880', rgb: '26,108,56'  }; // зелёный (светлее на 10%) → ярко-светлый
+  if (p >= 0.33) return { from: '#974E1A', to: '#FFB84A', rgb: '151,78,26'  }; // оранжевый (светлее на 10%) → светлый
+  return           { from: '#971A1A',  to: '#FF7070', rgb: '151,26,26'       }; // красный (светлее на 10%) → светлый
 }
 function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
@@ -375,14 +375,9 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent 
             <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{dateLabel}</div>
           </div>
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
-            <defs>
-              <linearGradient id={`tg-${id}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={ringTheme(pct).from}/><stop offset="100%" stopColor={ringTheme(pct).to}/>
-              </linearGradient>
-            </defs>
             <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
             <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
-            <text x={CX} y={CY + 5} textAnchor="middle" fill={`url(#tg-${id})`} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
+            <text x={CX} y={CY + 5} textAnchor="middle" fill={ringTheme(pct).to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
             <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>
           </svg>
           <div style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%' }}>
