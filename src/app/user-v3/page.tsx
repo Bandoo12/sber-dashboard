@@ -137,7 +137,7 @@ const EMPLOYEES: Employee[] = [
 function ringTheme(p: number): { from: string; to: string; rgb: string } {
   if (p >= 0.66) return { from: '#1A6C38', to: '#50E880', rgb: '26,108,56'  }; // зелёный (светлее на 10%) → ярко-светлый
   if (p >= 0.33) return { from: '#974E1A', to: '#FFB84A', rgb: '151,78,26'  }; // оранжевый (светлее на 10%) → светлый
-  return           { from: '#971A1A',  to: '#FF7070', rgb: '151,26,26'       }; // красный (светлее на 10%) → светлый
+  return           { from: '#971A1A',  to: '#FF2D2D', rgb: '151,26,26'       }; // красный (светлее на 10%) → насыщенный
 }
 function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
