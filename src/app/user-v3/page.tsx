@@ -133,26 +133,21 @@ const EMPLOYEES: Employee[] = [
 ];
 
 /* ── HELPERS ── */
-function pctRgb(p: number) { return p >= 0.66 ? '0,178,75' : p >= 0.33 ? '217,166,0' : '220,53,53'; }
+// 3 фиксированные темы: зелёный / оранжевый / красный
+function ringTheme(p: number): { from: string; to: string; rgb: string } {
+  if (p >= 0.66) return { from: '#00A843', to: '#55D980', rgb: '0,168,67'   }; // зелёный
+  if (p >= 0.33) return { from: '#D97000', to: '#FFA040', rgb: '217,112,0'  }; // оранжевый
+  return           { from: '#DC3535', to: '#FF8080', rgb: '220,53,53'        }; // красный
+}
+function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
 function lerpHex(a: string, b: string, t: number): string {
   const h = (s: string) => [parseInt(s.slice(1,3),16), parseInt(s.slice(3,5),16), parseInt(s.slice(5,7),16)];
   const [ar,ag,ab]=h(a); const [br,bg,bb]=h(b);
   return `#${[ar+(br-ar)*t,ag+(bg-ag)*t,ab+(bb-ab)*t].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}`;
 }
-// Плавный цвет текста: красный→жёлтый→зелёный
-function smoothColor(p: number): string {
-  const c=Math.min(Math.max(p,0),1);
-  return c<=0.5 ? lerpHex('#DC3535','#D9A600',c*2) : lerpHex('#D9A600','#00B24B',(c-0.5)*2);
-}
-// Плавный градиент кольца
-function smoothGrad(p: number) {
-  const c=Math.min(Math.max(p,0),1);
-  if (c<=0.5) { const t=c*2; return { from: lerpHex('#DC3535','#D9A600',t), to: lerpHex('#FF8070','#FFD060',t) }; }
-  const t=(c-0.5)*2; return { from: lerpHex('#D9A600','#00B24B',t), to: lerpHex('#FFD060','#00D95B',t) };
-}
-function pctColor(p: number, _T?: Tokens) { return smoothColor(p); }
-function pctGrad(p: number,  _T?: Tokens) { return smoothGrad(p); }
+function pctColor(p: number, _T?: Tokens) { return ringTheme(p).from; }
+function pctGrad(p: number,  _T?: Tokens) { return { from: ringTheme(p).from, to: ringTheme(p).to }; }
 function fmtPct(p: number) { const v = p * 100; return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`; }
 function fmtN(n: number)   { return n.toLocaleString('ru-RU'); }
 
@@ -191,7 +186,8 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
   const clamped = Math.min(Math.max(pct, 0), 1);
   const circ = 2 * Math.PI * r;
   const arc  = clamped * circ;
-  const glowC = smoothColor(clamped);
+  const theme  = ringTheme(clamped);
+  const glowC  = theme.from;
   return (
     <>
       <defs>
@@ -221,7 +217,7 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
             return (
               <path key={i}
                 d={`M ${x1.toFixed(3)} ${y1.toFixed(3)} A ${r} ${r} 0 0 1 ${x2.toFixed(3)} ${y2.toFixed(3)}`}
-                fill="none" stroke={smoothColor((i + 0.5) / n)} strokeWidth={sw} strokeLinecap="butt"
+                fill="none" stroke={lerpHex(theme.from, theme.to, (i + 0.5) / n)} strokeWidth={sw} strokeLinecap="butt"
               />
             );
           })}
@@ -391,7 +387,7 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent 
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
             <defs>
               <linearGradient id={`tg-${id}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#DC3535"/><stop offset="100%" stopColor={smoothColor(pct)}/>
+                <stop offset="0%" stopColor={ringTheme(pct).from}/><stop offset="100%" stopColor={ringTheme(pct).to}/>
               </linearGradient>
             </defs>
             <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
@@ -424,7 +420,7 @@ function MiniRing({ id, pct, size = 64 }: { id: string; pct: number; size?: numb
   const ready   = useReady(120);
   const R = size * 0.34; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
   const clamped = Math.min(pct, 1);
-  const glowC   = smoothColor(clamped);
+  const glowC   = ringTheme(clamped).from;
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
@@ -465,9 +461,8 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-manrope)',
           boxShadow: `0 0 12px rgba(${rgb},0.3)`,
-          overflow: 'hidden',
         }}>
-          <img src={emp.avatar} alt={emp.initials} width={38} height={38} style={{ objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display='none'; }}/>
+          {emp.initials}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: 'var(--font-manrope)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -551,16 +546,15 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-manrope)',
             boxShadow: `0 0 18px rgba(${pctRgbVal},0.3)`,
-            overflow: 'hidden',
           }}>
-            <img src={emp.avatar} alt={emp.initials} width={50} height={50} style={{ objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display='none'; }}/>
+            {emp.initials}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)', marginBottom: 5 }}>{emp.name}</div>
             {/* Дни до конца квартала */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
-                осталось <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дней</strong>
+                До конца квартала <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дней</strong>
               </span>
             </div>
           </div>
