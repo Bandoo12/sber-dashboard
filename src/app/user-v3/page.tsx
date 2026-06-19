@@ -463,11 +463,11 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
       {/* Два кружка: цвет по %  */}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'space-around' }}>
         {[
-          { label: 'Сегодня', pct: todayPct },
-          { label: 'С нач. кв.', pct: qtrPct },
+          { label: 'Сегодня',    pct: todayPct, key: 'today' },
+          { label: 'С нач. кв.', pct: qtrPct,   key: 'qtr'   },
         ].map(row => (
-          <div key={row.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <MiniRing id={`${emp.id}-${row.label}`} pct={row.pct} size={120}/>
+          <div key={row.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <MiniRing id={`${emp.id}-${row.key}`} pct={row.pct} size={120}/>
             <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
           </div>
         ))}
