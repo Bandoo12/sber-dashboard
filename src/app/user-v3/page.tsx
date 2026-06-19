@@ -148,7 +148,7 @@ function lerpHex(a: string, b: string, t: number): string {
 }
 function pctColor(p: number, _T?: Tokens) { return ringTheme(p).from; }
 function pctGrad(p: number,  _T?: Tokens) { return { from: ringTheme(p).from, to: ringTheme(p).to }; }
-function fmtPct(p: number) { const v = p * 100; return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`; }
+function fmtPct(p: number) { return `${Math.round(p * 100)}%`; }
 function fmtN(n: number)   { return n.toLocaleString('ru-RU'); }
 
 // Сотрудник успевает, если накопленный факт ≥ план на текущую дату (23 650 мин)
