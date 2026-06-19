@@ -369,25 +369,28 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent 
         transition: 'transform 650ms cubic-bezier(0.45,0,0.15,1)',
       }}>
         {/* ЛИЦО */}
-        <div style={{ padding: '24px 24px 20px', height: '100%', boxSizing: 'border-box', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '24px 24px 20px', height: '100%', boxSizing: 'border-box', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ alignSelf: 'flex-start' }}>
             <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               {title}{dateLabel && <span style={{ color: T.text, fontWeight: 700 }}> {dateLabel}</span>}
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
             <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
               <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
               <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
               <text x={CX} y={CY + 5} textAnchor="middle" fill={ringTheme(pct).to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
               <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>
             </svg>
-            <div style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%' }}>
+            {note && <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)', textAlign: 'center', marginTop: 8 }}>{note}</div>}
+            <div style={{ display: 'flex', gap: 12, marginTop: 12, width: '100%' }}>
               {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: 'План', val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
                 <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
                   <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)', letterSpacing: '-0.02em', lineHeight: 1 }}>{fmtN(val)}</div>
-                  <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginTop: 1 }}>мин</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: c, fontFamily: 'var(--font-inter)', letterSpacing: '-0.02em', lineHeight: 1 }}>{fmtN(val)}</div>
+                    <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>мин</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -538,13 +541,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
             {emp.initials}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)', marginBottom: 5 }}>{emp.name}</div>
-            {/* Дни до конца квартала */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>
-                До конца квартала <strong style={{ color: T.textMuted }}>{DAYS_REMAINING} дней</strong>
-              </span>
-            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{emp.name}</div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Сегодня</div>
@@ -558,7 +555,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
-          title="За смену"
+          title="Выполнено"
           note={`План ${BASE_PLAN} мин`}
           backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
         />
@@ -566,7 +563,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
           title="Среднее за квартал" dateLabel="С 21 марта"
-          note={`${fmtN(QTR_PLAN_TO_DATE)} мин`}
+          note={`До конца квартала ${DAYS_REMAINING} дней`}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
       </div>
