@@ -178,50 +178,40 @@ function useReady(delay = 80): boolean {
   return r;
 }
 
-/* ── СЕГМЕНТИРОВАННАЯ ДУГА (градиент точно по проценту) ── */
-function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900, n = 36 }: {
+/* ── ДУГА КОЛЬЦА (одна цветовая тема, плавный градиент внутри неё) ── */
+function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900, n: _n = 36 }: {
   id: string; cx: number; cy: number; r: number; sw: number;
   pct: number; dark: boolean; ready: boolean; duration?: number; n?: number;
 }) {
   const clamped = Math.min(Math.max(pct, 0), 1);
   const circ = 2 * Math.PI * r;
   const arc  = clamped * circ;
-  const theme  = ringTheme(clamped);
-  const glowC  = theme.from;
+  const theme = ringTheme(clamped);
   return (
     <>
       <defs>
-        <clipPath id={`clip-${id}`}>
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="white" strokeWidth={sw + 4}
-            style={{
-              strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
-              strokeDashoffset: ready ? circ - arc : circ,
-              transition: ready ? `stroke-dashoffset ${duration}ms cubic-bezier(0.22,1,0.36,1)` : 'none',
-              transform: 'rotate(-90deg)',
-              transformOrigin: `${cx}px ${cy}px`,
-            }}
-          />
-        </clipPath>
-        <filter id={`sf-${id}`} x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="0" stdDeviation={sw * 0.45}
-            floodColor={glowC} floodOpacity={dark ? '0.55' : '0.22'}/>
+        {/* Градиент: оба цвета одной семьи — смешивания нет */}
+        <linearGradient id={`rg-${id}`} gradientUnits="userSpaceOnUse" x1={cx + r} y1={cy} x2={cx - r} y2={cy}>
+          <stop offset="0%"   stopColor={theme.from}/>
+          <stop offset="100%" stopColor={theme.to}/>
+        </linearGradient>
+        <filter id={`rf-${id}`} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="0" stdDeviation={sw * 0.4}
+            floodColor={theme.from} floodOpacity={dark ? '0.5' : '0.2'}/>
         </filter>
       </defs>
       {clamped > 0 && (
-        <g clipPath={`url(#clip-${id})`} filter={`url(#sf-${id})`}>
-          {Array.from({ length: n }, (_, i) => {
-            const a0 = -Math.PI / 2 + (i / n) * 2 * Math.PI;
-            const a1 = -Math.PI / 2 + ((i + 1) / n) * 2 * Math.PI;
-            const x1 = cx + r * Math.cos(a0); const y1 = cy + r * Math.sin(a0);
-            const x2 = cx + r * Math.cos(a1); const y2 = cy + r * Math.sin(a1);
-            return (
-              <path key={i}
-                d={`M ${x1.toFixed(3)} ${y1.toFixed(3)} A ${r} ${r} 0 0 1 ${x2.toFixed(3)} ${y2.toFixed(3)}`}
-                fill="none" stroke={lerpHex(theme.from, theme.to, (i + 0.5) / n)} strokeWidth={sw} strokeLinecap="butt"
-              />
-            );
-          })}
-        </g>
+        <circle cx={cx} cy={cy} r={r} fill="none"
+          stroke={`url(#rg-${id})`} strokeWidth={sw} strokeLinecap="round"
+          filter={`url(#rf-${id})`}
+          style={{
+            strokeDasharray: `${circ.toFixed(2)} ${circ.toFixed(2)}`,
+            strokeDashoffset: ready ? circ - arc : circ,
+            transition: ready ? `stroke-dashoffset ${duration}ms cubic-bezier(0.22,1,0.36,1)` : 'none',
+            transform: 'rotate(-90deg)',
+            transformOrigin: `${cx}px ${cy}px`,
+          }}
+        />
       )}
     </>
   );
