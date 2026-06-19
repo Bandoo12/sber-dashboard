@@ -336,7 +336,7 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
 /* ── БОЛЬШОЕ КОЛЬЦО С ФЛИПОМ ── */
 interface RingProps {
   id: string; plan: number; fact: number;
-  title: string; dateLabel: string; note?: string;
+  title: string; dateLabel?: string; note?: string;
   backContent: React.ReactNode;
 }
 function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent }: RingProps) {
@@ -372,7 +372,7 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent 
         <div style={{ padding: '24px 24px 20px', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ alignSelf: 'flex-start', marginBottom: 16 }}>
             <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{title}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{dateLabel}</div>
+            {dateLabel && <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{dateLabel}</div>}
           </div>
           <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
             <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
@@ -555,7 +555,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
-          title="Среднее за сегодня" dateLabel={TODAY_DISP}
+          title="Среднее за смену"
           note={`План ${BASE_PLAN} мин`}
           backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
         />
