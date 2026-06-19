@@ -135,9 +135,9 @@ const EMPLOYEES: Employee[] = [
 /* ── HELPERS ── */
 // 3 фиксированные темы: зелёный / оранжевый / красный
 function ringTheme(p: number): { from: string; to: string; rgb: string } {
-  if (p >= 0.66) return { from: '#00A843', to: '#55D980', rgb: '0,168,67'   }; // зелёный
-  if (p >= 0.33) return { from: '#D97000', to: '#FFA040', rgb: '217,112,0'  }; // оранжевый
-  return           { from: '#DC3535', to: '#FF8080', rgb: '220,53,53'        }; // красный
+  if (p >= 0.66) return { from: '#005C22', to: '#50E880', rgb: '0,92,34'    }; // тёмно-зелёный → ярко-светлый
+  if (p >= 0.33) return { from: '#8B3A00', to: '#FFB84A', rgb: '139,58,0'   }; // тёмно-оранжевый → светлый
+  return           { from: '#8B0000',  to: '#FF7070', rgb: '139,0,0'         }; // тёмно-красный → светлый
 }
 function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
