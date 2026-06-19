@@ -371,8 +371,9 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, backContent 
         {/* ЛИЦО */}
         <div style={{ padding: '24px 24px 20px', height: '100%', boxSizing: 'border-box', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ alignSelf: 'flex-start' }}>
-            <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{title}</div>
-            {dateLabel && <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{dateLabel}</div>}
+            <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              {title}{dateLabel && <span style={{ color: T.text, fontWeight: 700 }}> {dateLabel}</span>}
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
@@ -557,7 +558,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
-          title="Среднее за смену"
+          title="За смену"
           note={`План ${BASE_PLAN} мин`}
           backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
         />
