@@ -336,10 +336,10 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
 /* ── БОЛЬШОЕ КОЛЬЦО С ФЛИПОМ ── */
 interface RingProps {
   id: string; plan: number; fact: number;
-  title: string; dateLabel?: string; note?: string; hideSubtitle?: boolean;
+  title: string; dateLabel?: string; note?: string; hideSubtitle?: boolean; planLabel?: string;
   backContent: React.ReactNode;
 }
-function ProductivityRing({ id, plan, fact, title, dateLabel, note, hideSubtitle, backContent }: RingProps) {
+function ProductivityRing({ id, plan, fact, title, dateLabel, note, hideSubtitle, planLabel = 'План', backContent }: RingProps) {
   const [flipped, setFlipped] = useState(false);
   const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
@@ -386,7 +386,7 @@ function ProductivityRing({ id, plan, fact, title, dateLabel, note, hideSubtitle
               {note && <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)', textAlign: 'center' }}>{note}</div>}
             </div>
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-              {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: 'План', val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
+              {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: planLabel, val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
                 <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
                   <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
@@ -564,7 +564,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
-          title="Среднее за квартал" dateLabel="С 21 марта"
+          title="Среднее за квартал" dateLabel="С 21 марта" planLabel="Средний план за смену"
           note={`До конца квартала ${DAYS_REMAINING} дней`}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
