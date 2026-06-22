@@ -335,17 +335,17 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
 
 /* ── БОЛЬШОЕ КОЛЬЦО С ФЛИПОМ ── */
 interface RingProps {
-  id: string; plan: number; fact: number;
+  id: string; plan: number; fact: number; displayPlan?: number;
   title: string; dateLabel?: string; note?: string; hideSubtitle?: boolean; planLabel?: string;
   backContent: React.ReactNode;
 }
-function ProductivityRing({ id, plan, fact, title, dateLabel, note, hideSubtitle, planLabel = 'План', backContent }: RingProps) {
+function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note, hideSubtitle, planLabel = 'План', backContent }: RingProps) {
   const [flipped, setFlipped] = useState(false);
   const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
   const ready    = useReady(100);
   const animFact = useCount(fact);
-  const animPlan = useCount(plan);
+  const animPlan = useCount(displayPlan ?? plan);
   const pct  = plan > 0 ? Math.min(fact / plan, 1) : 0;
   const rgb  = pctRgb(pct);
   const R = 88; const CX = 120; const CY = 120; const SW = 20;
@@ -564,7 +564,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
         <ProductivityRing
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
-          title="Среднее за квартал" dateLabel="С 21 марта" planLabel="Средний план за смену"
+          title="Среднее за квартал" dateLabel="С 21 марта" planLabel="Средний план за смену" displayPlan={360}
           note={`До конца квартала ${DAYS_REMAINING} дней`}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
