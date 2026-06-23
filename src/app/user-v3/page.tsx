@@ -52,7 +52,7 @@ function useTheme() { return useContext(ThemeCtx); }
 type TaskData = { label: string; count: number; totalMin: number };
 type QtrMonth = { label: string; short: string; fact: number; plan: number };
 type ShiftTaskItem = { label: string; count: number; totalMin: number };
-type ShiftProcess = { key: string; label: string; color: string; tasks: ShiftTaskItem[]; totalMin: number };
+type ShiftProcess = { key: string; label: string; color: string; colorFrom: string; colorTo: string; tasks: ShiftTaskItem[]; totalMin: number };
 type HoldEntry = { durationMin: number };
 type ShiftData = { processes: ShiftProcess[]; holds: HoldEntry[] };
 type Employee = {
@@ -113,9 +113,9 @@ function makeMonths(qtrFact: number): QtrMonth[] {
 /* ── СОТРУДНИКИ ── */
 function makeShiftData(todayFact: number): ShiftData {
   const procs = [
-    { key: 'post',   label: 'Пост',         color: '#3B82F6', share: 0.50 },
-    { key: 'online', label: 'Онлайн',       color: '#10B981', share: 0.30 },
-    { key: 'rehab',  label: 'Реабилитация', color: '#F59E0B', share: 0.20 },
+    { key: 'post',   label: 'Пост',         color: '#3B82F6', colorFrom: '#1E3A8A', colorTo: '#93C5FD', share: 0.50 },
+    { key: 'online', label: 'Онлайн',       color: '#10B981', colorFrom: '#064E3B', colorTo: '#6EE7B7', share: 0.30 },
+    { key: 'rehab',  label: 'Реабилитация', color: '#F59E0B', colorFrom: '#92400E', colorTo: '#FCD34D', share: 0.20 },
   ];
   const cmplx = [
     { label: 'Простые', share: 0.60, minPer: 15 },
@@ -129,7 +129,7 @@ function makeShiftData(todayFact: number): ShiftData {
       const count = Math.max(1, Math.round(totalMin / c.minPer));
       return { label: c.label, count, totalMin };
     });
-    return { key: p.key, label: p.label, color: p.color, tasks, totalMin: procMin };
+    return { key: p.key, label: p.label, color: p.color, colorFrom: p.colorFrom, colorTo: p.colorTo, tasks, totalMin: procMin };
   });
   const holdMins = [15, 8, 22];
   const holdCount = todayFact < 50 ? 1 : todayFact < 200 ? 2 : 3;
@@ -248,34 +248,56 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
 function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: number }) {
   const ready = useReady(150);
   const cx = size / 2, cy = size / 2;
-  const outerR = size * 0.46, innerR = size * 0.26, gap = 2;
+  const outerR = size * 0.46, innerR = size * 0.26;
+  const midR = (outerR + innerR) / 2;
+  const sw = outerR - innerR;
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
   const toXY = (r: number, deg: number): [number, number] => {
     const rad = (deg - 90) * Math.PI / 180;
     return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
   };
+  // Use stroked arcs with strokeLinecap="round" for rounded ends + gradient
+  const circ = 2 * Math.PI * midR;
   let angle = 0;
   const segs = processes.map(p => {
     const sweep = (p.totalMin / total) * 360;
-    const s = { ...p, startAngle: angle + gap / 2, sweep: Math.max(0, sweep - gap) };
+    const seg = { ...p, startAngle: angle, sweep };
     angle += sweep;
-    return s;
+    return seg;
   });
-  const segPath = (start: number, sweep: number): string => {
-    if (sweep <= 0) return '';
-    const end = start + sweep;
-    const [ox1, oy1] = toXY(outerR, start); const [ox2, oy2] = toXY(outerR, end);
-    const [ix1, iy1] = toXY(innerR, start); const [ix2, iy2] = toXY(innerR, end);
-    const large = sweep > 180 ? 1 : 0;
-    return `M ${ox1.toFixed(2)} ${oy1.toFixed(2)} A ${outerR} ${outerR} 0 ${large} 1 ${ox2.toFixed(2)} ${oy2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${innerR} ${innerR} 0 ${large} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`;
-  };
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
-      {segs.map((seg, i) => (
-        <path key={seg.key} d={segPath(seg.startAngle, seg.sweep)} fill={seg.color}
-          opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}/>
-      ))}
+      <defs>
+        {segs.map(seg => {
+          const [x1, y1] = toXY(midR, seg.startAngle);
+          const [x2, y2] = toXY(midR, seg.startAngle + seg.sweep);
+          return (
+            <linearGradient key={seg.key} id={`pg-${seg.key}`} gradientUnits="userSpaceOnUse" x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)}>
+              <stop offset="0%"   stopColor={seg.colorFrom}/>
+              <stop offset="100%" stopColor={seg.colorTo}/>
+            </linearGradient>
+          );
+        })}
+      </defs>
+      {/* Track */}
+      <circle cx={cx} cy={cy} r={midR} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={sw}/>
+      {segs.map((seg, i) => {
+        const dashLen = (seg.sweep / 360) * circ;
+        const offset  = circ - (seg.startAngle / 360) * circ;
+        return (
+          <circle key={seg.key} cx={cx} cy={cy} r={midR} fill="none"
+            stroke={`url(#pg-${seg.key})`} strokeWidth={sw} strokeLinecap="round"
+            strokeDasharray={`${dashLen.toFixed(2)} ${circ.toFixed(2)}`}
+            strokeDashoffset={offset.toFixed(2)}
+            opacity={ready ? 1 : 0}
+            style={{
+              transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px`,
+              transition: `opacity 350ms ease ${i * 100}ms`,
+            }}
+          />
+        );
+      })}
     </svg>
   );
 }
@@ -288,17 +310,9 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
       <div style={{ fontSize: 10, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-inter)' }}>Задачи за смену</div>
       <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
-        {/* Pie + легенда */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <PieChart processes={shiftData.processes} size={92}/>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {shiftData.processes.map(p => (
-              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }}/>
-                <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
-              </div>
-            ))}
-          </div>
+        {/* Pie */}
+        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <PieChart processes={shiftData.processes} size={100}/>
         </div>
         <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
         {/* Сгруппированные задачи */}
