@@ -321,7 +321,7 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
               fill="none"
               stroke={seg.color}
               strokeWidth={sw}
-              strokeLinecap="round"
+              strokeLinecap="butt"
               strokeDasharray={`${seg.arcLen.toFixed(2)} ${circ.toFixed(2)}`}
               style={{ transform: `rotate(${rot.toFixed(2)}deg)`, transformOrigin: `${cx}px ${cy}px` }}
             />
