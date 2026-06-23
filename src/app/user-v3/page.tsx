@@ -248,17 +248,32 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
 function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: number }) {
   const ready = useReady(150);
   const cx = size / 2, cy = size / 2;
-  const outerR = size * 0.46, innerR = size * 0.26;
-  const midR = (outerR + innerR) / 2;
-  const sw = outerR - innerR;
+  const R = size * 0.46;
+  const r = size * 0.26;
+  const midR = (R + r) / 2;
+  const GAP = 3;
+
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
-  const toXY = (r: number, deg: number): [number, number] => {
+
+  const toXY = (radius: number, deg: number): [number, number] => {
     const rad = (deg - 90) * Math.PI / 180;
-    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+    return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
   };
-  // Use stroked arcs with strokeLinecap="round" for rounded ends + gradient
-  const circ = 2 * Math.PI * midR;
+
+  const arcPath = (startDeg: number, endDeg: number): string => {
+    const s = startDeg + GAP / 2;
+    const e = endDeg - GAP / 2;
+    if (e - s < 2) return '';
+    const large = (e - s) > 180 ? 1 : 0;
+    const f = (n: number) => n.toFixed(2);
+    const [ox1, oy1] = toXY(R, s);
+    const [ox2, oy2] = toXY(R, e);
+    const [ix1, iy1] = toXY(r, e);
+    const [ix2, iy2] = toXY(r, s);
+    return `M ${f(ox1)} ${f(oy1)} A ${f(R)} ${f(R)} 0 ${large} 1 ${f(ox2)} ${f(oy2)} L ${f(ix1)} ${f(iy1)} A ${f(r)} ${f(r)} 0 ${large} 0 ${f(ix2)} ${f(iy2)} Z`;
+  };
+
   let angle = 0;
   const segs = processes.map(p => {
     const sweep = (p.totalMin / total) * 360;
@@ -266,39 +281,38 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
     angle += sweep;
     return seg;
   });
+
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
       <defs>
         {segs.map(seg => {
-          const [x1, y1] = toXY(midR, seg.startAngle);
-          const [x2, y2] = toXY(midR, seg.startAngle + seg.sweep);
+          const [x1, y1] = toXY(R, seg.startAngle + GAP / 2);
+          const [x2, y2] = toXY(R, seg.startAngle + seg.sweep - GAP / 2);
           return (
-            <linearGradient key={seg.key} id={`pg-${seg.key}`} gradientUnits="userSpaceOnUse" x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)}>
+            <linearGradient key={seg.key} id={`pg-${seg.key}`}
+              gradientUnits="userSpaceOnUse"
+              x1={x1.toFixed(2)} y1={y1.toFixed(2)}
+              x2={x2.toFixed(2)} y2={y2.toFixed(2)}>
               <stop offset="0%"   stopColor={seg.colorFrom}/>
               <stop offset="100%" stopColor={seg.colorTo}/>
             </linearGradient>
           );
         })}
       </defs>
-      {/* Track */}
-      <circle cx={cx} cy={cy} r={midR} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={sw}/>
+      <circle cx={cx} cy={cy} r={midR} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={R - r}/>
       {segs.map((seg, i) => {
-        const dashLen = (seg.sweep / 360) * circ;
-        const offset  = circ - (seg.startAngle / 360) * circ;
-        const count   = seg.tasks.reduce((s, t) => s + t.count, 0);
-        const mid     = seg.startAngle + seg.sweep / 2;
+        const count = seg.tasks.reduce((s, t) => s + t.count, 0);
+        const mid = seg.startAngle + seg.sweep / 2;
         const [tx, ty] = toXY(midR, mid);
+        const d = arcPath(seg.startAngle, seg.startAngle + seg.sweep);
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
-            <circle cx={cx} cy={cy} r={midR} fill="none"
-              stroke={`url(#pg-${seg.key})`} strokeWidth={sw} strokeLinecap="round"
-              strokeDasharray={`${dashLen.toFixed(2)} ${circ.toFixed(2)}`}
-              strokeDashoffset={offset.toFixed(2)}
-              style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
-            />
-            {count > 0 && seg.sweep > 20 && (
-              <text x={tx.toFixed(1)} y={ty.toFixed(1)} textAnchor="middle" dominantBaseline="middle"
-                fill="#fff" fontSize={Math.round(sw * 0.42)} fontWeight="700" fontFamily="var(--font-manrope)"
+            {d && <path d={d} fill={`url(#pg-${seg.key})`}/>}
+            {count > 0 && seg.sweep > 18 && (
+              <text x={tx.toFixed(1)} y={ty.toFixed(1)}
+                textAnchor="middle" dominantBaseline="middle"
+                fill="#fff" fontSize={Math.round((R - r) * 0.42)} fontWeight="700"
+                fontFamily="var(--font-manrope)"
                 style={{ pointerEvents: 'none' }}>
                 {count}
               </text>
