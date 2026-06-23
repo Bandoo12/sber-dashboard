@@ -273,59 +273,87 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
 }
 
 /* ── PIE CHART ── */
+// Filled donut wedge path with rounded corners — no strokeLinecap bleed
+function donutSegPath(
+  cx: number, cy: number, Ri: number, Ro: number,
+  aStart: number, aEnd: number, cr: number
+): string {
+  const rad = (d: number) => (d - 90) * Math.PI / 180;
+  const px  = (r: number, d: number) => cx + r * Math.cos(rad(d));
+  const py  = (r: number, d: number) => cy + r * Math.sin(rad(d));
+  const sweep = aEnd - aStart;
+  // Angular offset per corner, clamped to 45% of half-sweep
+  const δo = Math.min((cr / Ro) * (180 / Math.PI), sweep * 0.45);
+  const δi = Math.min((cr / Ri) * (180 / Math.PI), sweep * 0.45);
+  const cro = δo * Ro * Math.PI / 180; // actual corner radius at outer edge
+  const cri = δi * Ri * Math.PI / 180; // actual corner radius at inner edge
+  const f = (n: number) => n.toFixed(2);
+  const O1x = px(Ro, aStart+δo), O1y = py(Ro, aStart+δo);
+  const O2x = px(Ro, aEnd  -δo), O2y = py(Ro, aEnd  -δo);
+  const I1x = px(Ri, aStart+δi), I1y = py(Ri, aStart+δi);
+  const I2x = px(Ri, aEnd  -δi), I2y = py(Ri, aEnd  -δi);
+  const ECOx = px(Ro-cro, aEnd),   ECOy = py(Ro-cro, aEnd);
+  const ECIx = px(Ri+cri, aEnd),   ECIy = py(Ri+cri, aEnd);
+  const SCIx = px(Ri+cri, aStart), SCIy = py(Ri+cri, aStart);
+  const SCOx = px(Ro-cro, aStart), SCOy = py(Ro-cro, aStart);
+  const lgo = sweep - 2*δo > 180 ? 1 : 0;
+  const lgi = sweep - 2*δi > 180 ? 1 : 0;
+  return [
+    `M ${f(O1x)},${f(O1y)}`,
+    `A ${f(Ro)} ${f(Ro)} 0 ${lgo} 1 ${f(O2x)},${f(O2y)}`,
+    `A ${f(cro)} ${f(cro)} 0 0 1 ${f(ECOx)},${f(ECOy)}`,
+    `L ${f(ECIx)},${f(ECIy)}`,
+    `A ${f(cri)} ${f(cri)} 0 0 0 ${f(I2x)},${f(I2y)}`,
+    `A ${f(Ri)} ${f(Ri)} 0 ${lgi} 0 ${f(I1x)},${f(I1y)}`,
+    `A ${f(cri)} ${f(cri)} 0 0 0 ${f(SCIx)},${f(SCIy)}`,
+    `L ${f(SCOx)},${f(SCOy)}`,
+    `A ${f(cro)} ${f(cro)} 0 0 1 ${f(O1x)},${f(O1y)}`,
+    'Z',
+  ].join(' ');
+}
+
 function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: number }) {
   const ready = useReady(150);
   const { dark } = useTheme();
   const cx = size / 2, cy = size / 2;
   const R  = size * 0.38;
   const sw = size * 0.20;
-  const circ = 2 * Math.PI * R;
+  const Ro = R + sw / 2;
+  const Ri = R - sw / 2;
+  const cr = Math.min(sw * 0.22, size * 0.038); // corner radius
 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
 
-  // 2px зазор между внешними краями сегментов — визуально касаются
-  const GAP_ARC = 2;
-  const GAP_DEG = (GAP_ARC / circ) * 360;
-
-  const toXY = (radius: number, deg: number): [number, number] => {
-    const rad = (deg - 90) * Math.PI / 180;
-    return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
-  };
+  const GAP_DEG = 1.5; // thin gap between segments in degrees
 
   let angle = 0;
   const segs = processes.map(p => {
-    const sweep  = (p.totalMin / total) * 360;
-    const arcLen = Math.max(0, (sweep / 360) * circ - GAP_ARC);
-    const seg = { ...p, startAngle: angle, sweep, arcLen };
+    const sweep = (p.totalMin / total) * 360;
+    const seg = { ...p, startAngle: angle, sweep };
     angle += sweep;
     return seg;
   });
 
   const trackC = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.10)';
+  const fs = Math.round(sw * 0.40);
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
       <circle cx={cx} cy={cy} r={R} fill="none" stroke={trackC} strokeWidth={sw}/>
       {segs.map((seg, i) => {
-        if (seg.arcLen <= 0) return null;
+        if (seg.sweep <= GAP_DEG * 1.2) return null;
+        const aStart = seg.startAngle + GAP_DEG / 2;
+        const aEnd   = seg.startAngle + seg.sweep - GAP_DEG / 2;
         const pctVal = Math.round((seg.totalMin / total) * 100);
         const mid = seg.startAngle + seg.sweep / 2;
-        const [tx, ty] = toXY(R, mid);
-        const fs = Math.round(sw * 0.43);
-        const rot = seg.startAngle + GAP_DEG / 2 - 90;
+        const rad = (d: number) => (d - 90) * Math.PI / 180;
+        const tx = cx + R * Math.cos(rad(mid));
+        const ty = cy + R * Math.sin(rad(mid));
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
-            <circle
-              cx={cx} cy={cy} r={R}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth={sw}
-              strokeLinecap="butt"
-              strokeDasharray={`${seg.arcLen.toFixed(2)} ${circ.toFixed(2)}`}
-              style={{ transform: `rotate(${rot.toFixed(2)}deg)`, transformOrigin: `${cx}px ${cy}px` }}
-            />
-            {pctVal > 0 && seg.sweep > 28 && (
+            <path d={donutSegPath(cx, cy, Ri, Ro, aStart, aEnd, cr)} fill={seg.color}/>
+            {pctVal > 0 && seg.sweep > 26 && (
               <text x={tx.toFixed(1)} y={ty.toFixed(1)}
                 textAnchor="middle" dominantBaseline="middle"
                 fill={textOnColor(seg.color)} fontSize={fs} fontWeight="700"
