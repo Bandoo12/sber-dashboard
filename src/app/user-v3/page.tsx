@@ -51,13 +51,17 @@ function useTheme() { return useContext(ThemeCtx); }
 /* ── TYPES ── */
 type TaskData = { label: string; count: number; totalMin: number };
 type QtrMonth = { label: string; short: string; fact: number; plan: number };
+type ShiftTaskItem = { label: string; count: number; totalMin: number };
+type ShiftProcess = { key: string; label: string; color: string; tasks: ShiftTaskItem[]; totalMin: number };
+type HoldEntry = { durationMin: number };
+type ShiftData = { processes: ShiftProcess[]; holds: HoldEntry[] };
 type Employee = {
   id: string; name: string; initials: string;
   gradFrom: string; gradTo: string;
   avatar: string;
   todayFact: number; todayPlan: number;
   qtrFact: number; qtrPlan: number;
-  todayTasks: TaskData[]; qtrTasks: TaskData[];
+  shiftData: ShiftData; qtrTasks: TaskData[];
   months: QtrMonth[];
 };
 
@@ -107,29 +111,52 @@ function makeMonths(qtrFact: number): QtrMonth[] {
 }
 
 /* ── СОТРУДНИКИ ── */
-function makeTasks(todayFact: number, qtrFact: number): { todayTasks: TaskData[]; qtrTasks: TaskData[] } {
+function makeShiftData(todayFact: number): ShiftData {
+  const procs = [
+    { key: 'post',   label: 'Пост',         color: '#3B82F6', share: 0.50 },
+    { key: 'online', label: 'Онлайн',       color: '#10B981', share: 0.30 },
+    { key: 'rehab',  label: 'Реабилитация', color: '#F59E0B', share: 0.20 },
+  ];
+  const cmplx = [
+    { label: 'Простые', share: 0.60, minPer: 15 },
+    { label: 'Средние', share: 0.30, minPer: 30 },
+    { label: 'Сложные', share: 0.10, minPer: 60 },
+  ];
+  const processes = procs.map(p => {
+    const procMin = Math.round(todayFact * p.share);
+    const tasks = cmplx.map(c => {
+      const totalMin = Math.round(procMin * c.share);
+      const count = Math.max(1, Math.round(totalMin / c.minPer));
+      return { label: c.label, count, totalMin };
+    });
+    return { key: p.key, label: p.label, color: p.color, tasks, totalMin: procMin };
+  });
+  const holdMins = [15, 8, 22];
+  const holdCount = todayFact < 50 ? 1 : todayFact < 200 ? 2 : 3;
+  const holds: HoldEntry[] = holdMins.slice(0, holdCount).map(durationMin => ({ durationMin }));
+  return { processes, holds };
+}
+function makeTasks(qtrFact: number): { qtrTasks: TaskData[] } {
   const split = [
     { label: 'Стандартная АФМ',  minPerTask: 22, share: 0.62 },
     { label: 'Экспресс-проверка', minPerTask: 10, share: 0.14 },
     { label: 'Сложная АФМ',      minPerTask: 40, share: 0.14 },
     { label: 'Срочная',           minPerTask: 30, share: 0.10 },
   ];
-  const build = (total: number): TaskData[] =>
-    split.map(s => {
-      const totalMin = Math.round(total * s.share);
-      return { label: s.label, count: Math.max(1, Math.round(totalMin / s.minPerTask)), totalMin };
-    });
-  return { todayTasks: build(todayFact), qtrTasks: build(qtrFact) };
+  return { qtrTasks: split.map(s => {
+    const totalMin = Math.round(qtrFact * s.share);
+    return { label: s.label, count: Math.max(1, Math.round(totalMin / s.minPerTask)), totalMin };
+  })};
 }
 
 // qtrFact vs QTR_PLAN_TO_DATE (23 650 мин) — ≥ плана = успевает
 const EMPLOYEES: Employee[] = [
-  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact:  65, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), ...makeTasks( 65, 12800) },
-  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', avatar: 'https://randomuser.me/api/portraits/men/32.jpg',   gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 20400, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(20400), ...makeTasks(396, 20400) },
-  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', avatar: 'https://randomuser.me/api/portraits/women/17.jpg', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 24000, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24000), ...makeTasks(430, 24000) },
-  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', avatar: 'https://randomuser.me/api/portraits/men/58.jpg',   gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), ...makeTasks(189,  8500) },
-  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 15800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(15800), ...makeTasks(314, 15800) },
-  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', avatar: 'https://randomuser.me/api/portraits/men/11.jpg',   gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 24200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24200), ...makeTasks(430, 24200) },
+  { id: 'e1', name: 'Иванова Анна Сергеевна',        initials: 'ИА', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', gradFrom: '#D9A600', gradTo: '#00D95B', todayFact:  65, todayPlan: 430, qtrFact: 12800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(12800), shiftData: makeShiftData( 65), ...makeTasks(12800) },
+  { id: 'e2', name: 'Петров Сергей Иванович',         initials: 'ПС', avatar: 'https://randomuser.me/api/portraits/men/32.jpg',   gradFrom: '#1381FF', gradTo: '#00D95B', todayFact: 396, todayPlan: 430, qtrFact: 20400, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(20400), shiftData: makeShiftData(396), ...makeTasks(20400) },
+  { id: 'e3', name: 'Смирнова Ольга Петровна',        initials: 'СО', avatar: 'https://randomuser.me/api/portraits/women/17.jpg', gradFrom: '#00D95B', gradTo: '#1381FF', todayFact: 430, todayPlan: 430, qtrFact: 24000, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24000), shiftData: makeShiftData(430), ...makeTasks(24000) },
+  { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', avatar: 'https://randomuser.me/api/portraits/men/58.jpg',   gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), shiftData: makeShiftData(189), ...makeTasks( 8500) },
+  { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 15800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(15800), shiftData: makeShiftData(314), ...makeTasks(15800) },
+  { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', avatar: 'https://randomuser.me/api/portraits/men/11.jpg',   gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 24200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24200), shiftData: makeShiftData(430), ...makeTasks(24200) },
 ];
 
 /* ── HELPERS ── */
@@ -217,47 +244,103 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
   );
 }
 
-/* ── ОБОРОТ «СЕГОДНЯ» ── */
-function TasksBack({ gradFrom, gradTo, tasks }: { gradFrom: string; gradTo: string; tasks: TaskData[] }) {
-  const { T } = useTheme();
-  const ready    = useReady(200);
-  const totalMin = tasks.reduce((s, t) => s + t.totalMin, 0);
-  const totalCnt = tasks.reduce((s, t) => s + t.count,    0);
+/* ── PIE CHART ── */
+function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: number }) {
+  const ready = useReady(150);
+  const cx = size / 2, cy = size / 2;
+  const outerR = size * 0.46, innerR = size * 0.26, gap = 2;
+  const total = processes.reduce((s, p) => s + p.totalMin, 0);
+  if (total === 0) return <svg width={size} height={size}/>;
+  const toXY = (r: number, deg: number): [number, number] => {
+    const rad = (deg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  };
+  let angle = 0;
+  const segs = processes.map(p => {
+    const sweep = (p.totalMin / total) * 360;
+    const s = { ...p, startAngle: angle + gap / 2, sweep: Math.max(0, sweep - gap) };
+    angle += sweep;
+    return s;
+  });
+  const segPath = (start: number, sweep: number): string => {
+    if (sweep <= 0) return '';
+    const end = start + sweep;
+    const [ox1, oy1] = toXY(outerR, start); const [ox2, oy2] = toXY(outerR, end);
+    const [ix1, iy1] = toXY(innerR, start); const [ix2, iy2] = toXY(innerR, end);
+    const large = sweep > 180 ? 1 : 0;
+    return `M ${ox1.toFixed(2)} ${oy1.toFixed(2)} A ${outerR} ${outerR} 0 ${large} 1 ${ox2.toFixed(2)} ${oy2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${innerR} ${innerR} 0 ${large} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`;
+  };
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ fontSize: 11, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-inter)', marginBottom: 14 }}>
-        Задачи за сегодня
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
-        {tasks.map((task, i) => {
-          const share  = task.totalMin / totalMin;
-          const minPer = Math.round(task.totalMin / task.count);
-          return (
-            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>{task.label}</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{task.count}</span>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад × {minPer} мин</span>
+    <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
+      {segs.map((seg, i) => (
+        <path key={seg.key} d={segPath(seg.startAngle, seg.sweep)} fill={seg.color}
+          opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}/>
+      ))}
+    </svg>
+  );
+}
+
+/* ── ОБОРОТ «СМЕНА» ── */
+function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
+  const { T } = useTheme();
+  const holdTotal = shiftData.holds.reduce((s, h) => s + h.durationMin, 0);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
+      <div style={{ fontSize: 10, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-inter)' }}>Задачи за смену</div>
+      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
+        {/* Pie + легенда */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <PieChart processes={shiftData.processes} size={92}/>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {shiftData.processes.map(p => (
+              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }}/>
+                <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
+        {/* Сгруппированные задачи */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7, minWidth: 0 }}>
+          {shiftData.processes.map(p => (
+            <div key={p.key}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                <div style={{ width: 6, height: 6, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
+                <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
+              </div>
+              {p.tasks.map(t => (
+                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingLeft: 11, marginBottom: 1 }}>
+                  <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
+                  <span style={{ fontSize: 11, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: T.text, fontWeight: 600 }}>{t.count}</span>
+                    <span style={{ color: T.textDim }}> · {t.totalMin}м</span>
+                  </span>
                 </div>
-              </div>
-              <div style={{ height: 6, borderRadius: 999, background: T.track, overflow: 'hidden', position: 'relative' }}>
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
-                  background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
-                  width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
-                  transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
-                }}/>
-              </div>
+              ))}
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
-      <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-          {totalCnt} задач · {fmtN(totalMin)} мин
-        </span>
+      {/* HOLD */}
+      <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 8, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#FF6B6B', fontFamily: 'var(--font-inter)' }}>HOLD</span>
+          <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
+            {shiftData.holds.length} {shiftData.holds.length === 1 ? 'переход' : 'перехода'}
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'var(--font-inter)' }}>
+            <span style={{ color: T.textDim }}>Итого: </span>
+            <span style={{ fontWeight: 700, color: T.text }}>{holdTotal} мин</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          {shiftData.holds.map((h, i) => (
+            <div key={i} style={{ fontSize: 10, fontFamily: 'var(--font-inter)', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.25)', borderRadius: 6, padding: '3px 7px', color: '#FF8E8E' }}>
+              #{i + 1} · {h.durationMin} мин
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -559,7 +642,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           plan={emp.todayPlan} fact={emp.todayFact}
           title="Выполнено за смену"
           subtitle="прогресс"
-          backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
+          backContent={<ShiftBack shiftData={emp.shiftData}/>}
         />
         <ProductivityRing
           id={`${emp.id}-qtr`}
