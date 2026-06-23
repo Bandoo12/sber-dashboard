@@ -251,7 +251,7 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
   const R = size * 0.46;
   const r = size * 0.26;
   const midR = (R + r) / 2;
-  const GAP = 8;
+  const GAP = 10;
 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
@@ -261,17 +261,21 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
     return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
   };
 
+  const capR = (R - r) / 2; // радиус скругления = полная ширина кольца / 2
+
   const arcPath = (startDeg: number, endDeg: number): string => {
     const s = startDeg + GAP / 2;
     const e = endDeg - GAP / 2;
     if (e - s < 2) return '';
     const large = (e - s) > 180 ? 1 : 0;
     const f = (n: number) => n.toFixed(2);
+    const cr = capR.toFixed(2);
     const [ox1, oy1] = toXY(R, s);
     const [ox2, oy2] = toXY(R, e);
     const [ix1, iy1] = toXY(r, e);
     const [ix2, iy2] = toXY(r, s);
-    return `M ${f(ox1)} ${f(oy1)} A ${f(R)} ${f(R)} 0 ${large} 1 ${f(ox2)} ${f(oy2)} L ${f(ix1)} ${f(iy1)} A ${f(r)} ${f(r)} 0 ${large} 0 ${f(ix2)} ${f(iy2)} Z`;
+    // Скруглённые торцы через arc вместо прямых линий L
+    return `M ${f(ox1)} ${f(oy1)} A ${f(R)} ${f(R)} 0 ${large} 1 ${f(ox2)} ${f(oy2)} A ${cr} ${cr} 0 0 1 ${f(ix1)} ${f(iy1)} A ${f(r)} ${f(r)} 0 ${large} 0 ${f(ix2)} ${f(iy2)} A ${cr} ${cr} 0 0 1 ${f(ox1)} ${f(oy1)} Z`;
   };
 
   let angle = 0;
@@ -306,17 +310,10 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
         const mid = seg.startAngle + seg.sweep / 2;
         const [tx, ty] = toXY(midR, mid);
         const d = arcPath(seg.startAngle, seg.startAngle + seg.sweep);
-        const capR = (R - r) / 2;
-        const s0 = seg.startAngle + GAP / 2;
-        const e0 = seg.startAngle + seg.sweep - GAP / 2;
-        const [scx, scy] = toXY(midR, s0);
-        const [ecx, ecy] = toXY(midR, e0);
         const fs = Math.round((R - r) * 0.42);
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
             {d && <path d={d} fill={`url(#pg-${seg.key})`}/>}
-            {d && <circle cx={scx.toFixed(2)} cy={scy.toFixed(2)} r={capR.toFixed(2)} fill={`url(#pg-${seg.key})`}/>}
-            {d && <circle cx={ecx.toFixed(2)} cy={ecy.toFixed(2)} r={capR.toFixed(2)} fill={`url(#pg-${seg.key})`}/>}
             {count > 0 && seg.sweep > 22 && (
               <text x={tx.toFixed(1)} y={ty.toFixed(1)}
                 textAnchor="middle" dominantBaseline="middle"
