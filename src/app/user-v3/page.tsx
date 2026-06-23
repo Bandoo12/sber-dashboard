@@ -285,17 +285,25 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
       {segs.map((seg, i) => {
         const dashLen = (seg.sweep / 360) * circ;
         const offset  = circ - (seg.startAngle / 360) * circ;
+        const count   = seg.tasks.reduce((s, t) => s + t.count, 0);
+        const mid     = seg.startAngle + seg.sweep / 2;
+        const [tx, ty] = toXY(midR, mid);
         return (
-          <circle key={seg.key} cx={cx} cy={cy} r={midR} fill="none"
-            stroke={`url(#pg-${seg.key})`} strokeWidth={sw} strokeLinecap="round"
-            strokeDasharray={`${dashLen.toFixed(2)} ${circ.toFixed(2)}`}
-            strokeDashoffset={offset.toFixed(2)}
-            opacity={ready ? 1 : 0}
-            style={{
-              transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px`,
-              transition: `opacity 350ms ease ${i * 100}ms`,
-            }}
-          />
+          <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
+            <circle cx={cx} cy={cy} r={midR} fill="none"
+              stroke={`url(#pg-${seg.key})`} strokeWidth={sw} strokeLinecap="round"
+              strokeDasharray={`${dashLen.toFixed(2)} ${circ.toFixed(2)}`}
+              strokeDashoffset={offset.toFixed(2)}
+              style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
+            />
+            {count > 0 && seg.sweep > 20 && (
+              <text x={tx.toFixed(1)} y={ty.toFixed(1)} textAnchor="middle" dominantBaseline="middle"
+                fill="#fff" fontSize={Math.round(sw * 0.42)} fontWeight="700" fontFamily="var(--font-manrope)"
+                style={{ pointerEvents: 'none' }}>
+                {count}
+              </text>
+            )}
+          </g>
         );
       })}
     </svg>
