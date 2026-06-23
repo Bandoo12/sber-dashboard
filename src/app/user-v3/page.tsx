@@ -312,7 +312,7 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
       <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
         {/* Pie */}
         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <PieChart processes={shiftData.processes} size={100}/>
+          <PieChart processes={shiftData.processes} size={140}/>
         </div>
         <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
         {/* Сгруппированные задачи */}
