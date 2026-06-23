@@ -248,73 +248,53 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
 function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: number }) {
   const ready = useReady(150);
   const cx = size / 2, cy = size / 2;
-  const R = size * 0.46;
-  const r = size * 0.26;
-  const midR = (R + r) / 2;
-  const GAP = 10;
+  const R  = size * 0.38;
+  const sw = size * 0.20;
+  const circ = 2 * Math.PI * R;
 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
+
+  // Зазор = ширина обводки → скруглённые шапки соседних сегментов встык
+  const GAP_ARC = sw;
+  const GAP_DEG = (GAP_ARC / circ) * 360;
 
   const toXY = (radius: number, deg: number): [number, number] => {
     const rad = (deg - 90) * Math.PI / 180;
     return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
   };
 
-  const capR = (R - r) / 2; // радиус скругления = полная ширина кольца / 2
-
-  const arcPath = (startDeg: number, endDeg: number): string => {
-    const s = startDeg + GAP / 2;
-    const e = endDeg - GAP / 2;
-    if (e - s < 2) return '';
-    const large = (e - s) > 180 ? 1 : 0;
-    const f = (n: number) => n.toFixed(2);
-    const cr = capR.toFixed(2);
-    const [ox1, oy1] = toXY(R, s);
-    const [ox2, oy2] = toXY(R, e);
-    const [ix1, iy1] = toXY(r, e);
-    const [ix2, iy2] = toXY(r, s);
-    // Скруглённые торцы через arc вместо прямых линий L
-    return `M ${f(ox1)} ${f(oy1)} A ${f(R)} ${f(R)} 0 ${large} 1 ${f(ox2)} ${f(oy2)} A ${cr} ${cr} 0 0 1 ${f(ix1)} ${f(iy1)} A ${f(r)} ${f(r)} 0 ${large} 0 ${f(ix2)} ${f(iy2)} A ${cr} ${cr} 0 0 1 ${f(ox1)} ${f(oy1)} Z`;
-  };
-
   let angle = 0;
   const segs = processes.map(p => {
-    const sweep = (p.totalMin / total) * 360;
-    const seg = { ...p, startAngle: angle, sweep };
+    const sweep  = (p.totalMin / total) * 360;
+    const arcLen = Math.max(0, (sweep / 360) * circ - GAP_ARC);
+    const seg = { ...p, startAngle: angle, sweep, arcLen };
     angle += sweep;
     return seg;
   });
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
-      <defs>
-        {segs.map(seg => {
-          const mid = seg.startAngle + seg.sweep / 2;
-          const [x1, y1] = toXY(r, mid);
-          const [x2, y2] = toXY(R, mid);
-          return (
-            <linearGradient key={seg.key} id={`pg-${seg.key}`}
-              gradientUnits="userSpaceOnUse"
-              x1={x1.toFixed(2)} y1={y1.toFixed(2)}
-              x2={x2.toFixed(2)} y2={y2.toFixed(2)}>
-              <stop offset="0%"   stopColor={seg.colorFrom}/>
-              <stop offset="100%" stopColor={seg.colorTo}/>
-            </linearGradient>
-          );
-        })}
-      </defs>
-      <circle cx={cx} cy={cy} r={midR} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={R - r}/>
+      <circle cx={cx} cy={cy} r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={sw}/>
       {segs.map((seg, i) => {
+        if (seg.arcLen <= 0) return null;
         const count = seg.tasks.reduce((s, t) => s + t.count, 0);
         const mid = seg.startAngle + seg.sweep / 2;
-        const [tx, ty] = toXY(midR, mid);
-        const d = arcPath(seg.startAngle, seg.startAngle + seg.sweep);
-        const fs = Math.round((R - r) * 0.42);
+        const [tx, ty] = toXY(R, mid);
+        const fs = Math.round(sw * 0.46);
+        const rot = seg.startAngle + GAP_DEG / 2 - 90;
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
-            {d && <path d={d} fill={`url(#pg-${seg.key})`}/>}
-            {count > 0 && seg.sweep > 22 && (
+            <circle
+              cx={cx} cy={cy} r={R}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={sw}
+              strokeLinecap="round"
+              strokeDasharray={`${seg.arcLen.toFixed(2)} ${circ.toFixed(2)}`}
+              style={{ transform: `rotate(${rot.toFixed(2)}deg)`, transformOrigin: `${cx}px ${cy}px` }}
+            />
+            {count > 0 && seg.sweep > 30 && (
               <text x={tx.toFixed(1)} y={ty.toFixed(1)}
                 textAnchor="middle" dominantBaseline="middle"
                 fill="#fff" fontSize={fs} fontWeight="700"
@@ -330,51 +310,44 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
 }
 
 /* ── ОБОРОТ «СМЕНА» ── */
-const TASK_DEFS = [
-  { key: 'simple',  label: 'Простые', color: '#10B981', colorFrom: '#34D399', colorTo: '#059669', idx: 0 },
-  { key: 'medium',  label: 'Средние', color: '#3B82F6', colorFrom: '#60A5FA', colorTo: '#1D4ED8', idx: 1 },
-  { key: 'complex', label: 'Сложные', color: '#F59E0B', colorFrom: '#FDE68A', colorTo: '#D97706', idx: 2 },
-];
+// Оттенки: [Простые, Средние, Сложные] — светлый→тёмный внутри каждого процесса
+const PROC_SHADES: Record<string, string[]> = {
+  post:   ['#93C5FD', '#3B82F6', '#1E40AF'],
+  online: ['#6EE7B7', '#10B981', '#065F46'],
+  rehab:  ['#E2E8F0', '#94A3B8', '#475569'],
+};
 
 function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
   const { T } = useTheme();
   const holdTotal = shiftData.holds.reduce((s, h) => s + h.durationMin, 0);
 
-  const taskTypeProcs: ShiftProcess[] = TASK_DEFS.map(td => ({
-    key: td.key, label: td.label, color: td.color, colorFrom: td.colorFrom, colorTo: td.colorTo,
-    totalMin: shiftData.processes.reduce((s, p) => s + (p.tasks[td.idx]?.totalMin ?? 0), 0),
-    tasks: [{ label: td.label, count: shiftData.processes.reduce((s, p) => s + (p.tasks[td.idx]?.count ?? 0), 0), totalMin: 0 }],
-  }));
+  // 9 сегментов (процесс × тип задачи), только с totalMin > 0
+  const pieSegs: ShiftProcess[] = shiftData.processes.flatMap(p =>
+    p.tasks.map((t, ti) => {
+      const c = (PROC_SHADES[p.key] ?? ['#888','#666','#444'])[ti] ?? '#888';
+      return { key: `${p.key}-${ti}`, label: t.label, color: c, colorFrom: c, colorTo: c, totalMin: t.totalMin, tasks: [t] };
+    }).filter(s => s.totalMin > 0)
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
       <div style={{ fontSize: 10, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-inter)' }}>Задачи за смену</div>
       <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
-        {/* Pie по типам задач */}
+        {/* Pie: процесс × тип задачи */}
         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <PieChart processes={taskTypeProcs} size={140}/>
+          <PieChart processes={pieSegs} size={140}/>
         </div>
         <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
-        {/* Легенда + разбивка по процессам */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-          {/* Легенда типов задач */}
-          {taskTypeProcs.map(t => (
-            <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 7, height: 7, borderRadius: 999, background: t.color, flexShrink: 0 }}/>
-              <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)', flex: 1 }}>{t.label}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{t.tasks[0].count}</span>
-            </div>
-          ))}
-          <div style={{ height: 1, background: T.border, margin: '3px 0' }}/>
-          {/* Разбивка по процессам */}
+        {/* Разбивка по процессам */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
           {shiftData.processes.map(p => (
             <div key={p.key}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 1 }}>
-                <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                <div style={{ width: 6, height: 6, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
+                <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
               </div>
               {p.tasks.map(t => (
-                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingLeft: 10, marginBottom: 0 }}>
+                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingLeft: 11, marginBottom: 1 }}>
                   <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
                   <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{t.count}</span>
                 </div>
