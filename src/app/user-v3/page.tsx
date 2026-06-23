@@ -25,23 +25,23 @@ const DARK_T = {
   cardBg:     'rgba(255,255,255,0.025)',
 };
 const LIGHT_T = {
-  bg:         '#F0F2F5',
+  bg:         '#EAECF0',
   surface:    '#FFFFFF',
-  surface2:   '#F5F7FA',
-  btn:        '#E2E5EC',
-  border:     'rgba(0,0,0,0.08)',
+  surface2:   '#F0F2F7',
+  btn:        '#DDE1EA',
+  border:     'rgba(0,0,0,0.13)',
   text:       '#0D0F18',
-  textMuted:  '#4A4D5C',
-  textDim:    '#8A8EA0',
+  textMuted:  '#1F2233',
+  textDim:    '#4A5070',
   blue:       '#1068D9',
   green:      '#00A044',
   greenAct:   '#008838',
   yellow:     '#C08000',
   red:        '#C42B2B',
-  track:      'rgba(0,0,0,0.07)',
-  tabBg:      'rgba(0,0,0,0.05)',
-  statBg:     'rgba(0,0,0,0.03)',
-  statBorder: 'rgba(0,0,0,0.08)',
+  track:      'rgba(0,0,0,0.13)',
+  tabBg:      'rgba(0,0,0,0.08)',
+  statBg:     'rgba(0,0,0,0.055)',
+  statBorder: 'rgba(0,0,0,0.14)',
   cardBg:     '#FFFFFF',
 };
 type Tokens = typeof DARK_T;
@@ -50,11 +50,11 @@ function useTheme() { return useContext(ThemeCtx); }
 
 /* ── TYPES ── */
 type TaskData = { label: string; count: number; totalMin: number };
-type QtrMonth = { label: string; short: string; fact: number; plan: number };
 type ShiftTaskItem = { label: string; count: number; totalMin: number };
 type ShiftProcess = { key: string; label: string; color: string; colorFrom: string; colorTo: string; tasks: ShiftTaskItem[]; totalMin: number };
-type HoldEntry = { durationMin: number };
+type HoldEntry = { label: string; durationMin: number };
 type ShiftData = { processes: ShiftProcess[]; holds: HoldEntry[] };
+type QtrMonth = { label: string; short: string; fact: number; plan: number; procSplit: { post: number; online: number; rehab: number } };
 type Employee = {
   id: string; name: string; initials: string;
   gradFrom: string; gradTo: string;
@@ -93,20 +93,29 @@ const QTR_POS          = QTR_ELAPSED_DAYS / quarter.totalDays; // 0.837
 const QTR_PLAN_TO_DATE = QTR_WD_ELAPSED * BASE_PLAN; // 23 650 мин
 const QTR_FULL_PLAN    = QTR_WD_TOTAL   * BASE_PLAN; // 27 950 мин
 
-// Шаблоны месяцев (только плановые цифры)
+// Шаблоны месяцев — плановые цифры, вариация выполнения и разбивка по процессам
 const QTR_MONTH_PLANS = [
   { label: 'Март (с 21)', short: 'Мар', plan: 3010 },
   { label: 'Апрель',      short: 'Апр', plan: 9460 },
   { label: 'Май',         short: 'Май', plan: 9030 },
   { label: 'Июнь (1–5)', short: 'Июн', plan: 2150 },
 ];
-// Распределяем qtrFact по месяцам пропорционально их планам
+// Каждый месяц немного выше/ниже среднего — чтобы кружки не были одинаковыми
+const MONTH_VAR    = [0.82, 1.12, 0.96, 0.88];
+const MONTH_SPLITS = [
+  { post: 0.55, online: 0.28, rehab: 0.17 },
+  { post: 0.48, online: 0.35, rehab: 0.17 },
+  { post: 0.52, online: 0.30, rehab: 0.18 },
+  { post: 0.50, online: 0.33, rehab: 0.17 },
+];
 function makeMonths(qtrFact: number): QtrMonth[] {
-  const totalPlan = QTR_MONTH_PLANS.reduce((s, m) => s + m.plan, 0);
-  return QTR_MONTH_PLANS.map(m => ({
+  const raw = QTR_MONTH_PLANS.map((m, i) => m.plan * MONTH_VAR[i]);
+  const rawTotal = raw.reduce((s, v) => s + v, 0);
+  return QTR_MONTH_PLANS.map((m, i) => ({
     label: m.label, short: m.short,
-    fact: Math.round(qtrFact * (m.plan / totalPlan)),
+    fact: Math.round(qtrFact * raw[i] / rawTotal),
     plan: m.plan,
+    procSplit: MONTH_SPLITS[i],
   }));
 }
 
@@ -131,9 +140,12 @@ function makeShiftData(todayFact: number): ShiftData {
     });
     return { key: p.key, label: p.label, color: p.color, colorFrom: p.colorFrom, colorTo: p.colorTo, tasks, totalMin: procMin };
   });
-  const holdMins = [15, 8, 22];
-  const holdCount = todayFact < 50 ? 1 : todayFact < 200 ? 2 : 3;
-  const holds: HoldEntry[] = holdMins.slice(0, holdCount).map(durationMin => ({ durationMin }));
+  const holds: HoldEntry[] = [
+    { label: 'Обед',                                      durationMin: 57 },
+    { label: 'Консультация',                              durationMin: 38 },
+    { label: 'Летучки/совещания/встречи отдела',         durationMin: 28 },
+    { label: 'Минутка личного пространства',              durationMin: 11 },
+  ];
   return { processes, holds };
 }
 function makeTasks(qtrFact: number): { qtrTasks: TaskData[] } {
@@ -165,6 +177,15 @@ function ringTheme(p: number): { from: string; to: string; rgb: string } {
   if (p >= 0.66) return { from: '#22C55E', to: '#86EFAC', rgb: '34,197,94'   }; // зелёный
   if (p >= 0.33) return { from: '#F97316', to: '#FDE68A', rgb: '249,115,22'  }; // оранжевый
   return           { from: '#EF4444',  to: '#FCA5A5', rgb: '239,68,68'       }; // красный
+}
+// Нейтральная серая расцветка — для кольца «Сегодня»
+const GRAY_RING = { from: '#94A3B8', to: '#CBD5E1', rgb: '148,163,184' };
+// Фиксированные цвета для баров квартальных задач
+const TASK_BAR_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+function fmtHoldTotal(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h > 0 ? `${h}ч ${m}мин` : `${m}мин`;
 }
 function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
@@ -206,18 +227,18 @@ function useReady(delay = 80): boolean {
 }
 
 /* ── ДУГА КОЛЬЦА (одна цветовая тема, плавный градиент внутри неё) ── */
-function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900, n: _n = 36 }: {
+function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900, n: _n = 36, themeOverride }: {
   id: string; cx: number; cy: number; r: number; sw: number;
   pct: number; dark: boolean; ready: boolean; duration?: number; n?: number;
+  themeOverride?: { from: string; to: string };
 }) {
   const clamped = Math.min(Math.max(pct, 0), 1);
   const circ = 2 * Math.PI * r;
   const arc  = clamped * circ;
-  const theme = ringTheme(clamped);
+  const theme = themeOverride ?? ringTheme(clamped);
   return (
     <>
       <defs>
-        {/* Градиент: оба цвета одной семьи — смешивания нет */}
         <linearGradient id={`rg-${id}`} gradientUnits="userSpaceOnUse" x1={cx + r} y1={cy} x2={cx - r} y2={cy}>
           <stop offset="0%"   stopColor={theme.from}/>
           <stop offset="100%" stopColor={theme.to}/>
@@ -247,6 +268,7 @@ function SegmentedRingArc({ id, cx, cy, r, sw, pct, dark, ready, duration = 900,
 /* ── PIE CHART ── */
 function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: number }) {
   const ready = useReady(150);
+  const { dark } = useTheme();
   const cx = size / 2, cy = size / 2;
   const R  = size * 0.38;
   const sw = size * 0.20;
@@ -255,8 +277,8 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
 
-  // Зазор = ширина обводки → скруглённые шапки соседних сегментов встык
-  const GAP_ARC = sw;
+  // Точный зазор: caps ровно касаются — 2R·arcsin(sw/2R) = длина дуги до конца шапки
+  const GAP_ARC = 2 * R * Math.asin(Math.min(sw / (2 * R), 1));
   const GAP_DEG = (GAP_ARC / circ) * 360;
 
   const toXY = (radius: number, deg: number): [number, number] => {
@@ -273,15 +295,17 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
     return seg;
   });
 
+  const trackC = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.10)';
+
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
-      <circle cx={cx} cy={cy} r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={sw}/>
+      <circle cx={cx} cy={cy} r={R} fill="none" stroke={trackC} strokeWidth={sw}/>
       {segs.map((seg, i) => {
         if (seg.arcLen <= 0) return null;
-        const count = seg.tasks.reduce((s, t) => s + t.count, 0);
+        const pctVal = Math.round((seg.totalMin / total) * 100);
         const mid = seg.startAngle + seg.sweep / 2;
         const [tx, ty] = toXY(R, mid);
-        const fs = Math.round(sw * 0.46);
+        const fs = Math.round(sw * 0.43);
         const rot = seg.startAngle + GAP_DEG / 2 - 90;
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
@@ -294,12 +318,12 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
               strokeDasharray={`${seg.arcLen.toFixed(2)} ${circ.toFixed(2)}`}
               style={{ transform: `rotate(${rot.toFixed(2)}deg)`, transformOrigin: `${cx}px ${cy}px` }}
             />
-            {count > 0 && seg.sweep > 30 && (
+            {pctVal > 0 && seg.sweep > 28 && (
               <text x={tx.toFixed(1)} y={ty.toFixed(1)}
                 textAnchor="middle" dominantBaseline="middle"
                 fill="#fff" fontSize={fs} fontWeight="700"
                 fontFamily="var(--font-manrope)" style={{ pointerEvents: 'none' }}>
-                {count}
+                {pctVal}%
               </text>
             )}
           </g>
@@ -317,9 +341,17 @@ const PROC_SHADES: Record<string, string[]> = {
   rehab:  ['#E2E8F0', '#94A3B8', '#475569'],
 };
 
+const SHIFT_TAB_LABELS = [
+  { id: 'tasks', label: 'Задачи'  },
+  { id: 'holds', label: 'Холды'   },
+] as const;
+type ShiftTab = 'tasks' | 'holds';
+
 function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
-  const { T } = useTheme();
+  const [tab, setTab] = useState<ShiftTab>('tasks');
+  const { T, dark } = useTheme();
   const holdTotal = shiftData.holds.reduce((s, h) => s + h.durationMin, 0);
+  const total = shiftData.processes.reduce((s, p) => s + p.totalMin, 0);
 
   // 9 сегментов (процесс × тип задачи), только с totalMin > 0
   const pieSegs: ShiftProcess[] = shiftData.processes.flatMap(p =>
@@ -331,51 +363,73 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
-      <div style={{ fontSize: 10, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-inter)' }}>Задачи за смену</div>
-      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
-        {/* Pie: процесс × тип задачи */}
-        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <PieChart processes={pieSegs} size={140}/>
-        </div>
-        <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
-        {/* Разбивка по процессам */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-          {shiftData.processes.map(p => (
-            <div key={p.key}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-                <div style={{ width: 6, height: 6, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
-                <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
-              </div>
-              {p.tasks.map(t => (
-                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingLeft: 11, marginBottom: 1 }}>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
-                  <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{t.count}</span>
+      {/* Табы */}
+      <div style={{ display: 'flex', gap: 4, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)', borderRadius: 10, padding: 3, flexShrink: 0 }}>
+        {SHIFT_TAB_LABELS.map(t => (
+          <button key={t.id}
+            onClick={e => { e.stopPropagation(); setTab(t.id); }}
+            style={{
+              flex: 1, padding: '5px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: tab === t.id ? (dark ? '#2A2B35' : '#FFFFFF') : 'transparent',
+              boxShadow: tab === t.id && !dark ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
+              color: tab === t.id ? T.text : T.textMuted,
+              fontSize: 11, fontWeight: tab === t.id ? 600 : 400,
+              fontFamily: 'var(--font-inter)', transition: 'background 150ms',
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'tasks' ? (
+        <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
+          {/* Pie: процесс × тип задачи */}
+          <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <PieChart processes={pieSegs} size={138}/>
+          </div>
+          <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
+          {/* Легенда по процессам + задачам с оттенками */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflowY: 'auto' }}>
+            {shiftData.processes.map(p => {
+              const pMin = p.tasks.reduce((s, t) => s + t.totalMin, 0);
+              const pPct = total > 0 ? Math.round((pMin / total) * 100) : 0;
+              const shades = PROC_SHADES[p.key] ?? ['#888','#666','#444'];
+              return (
+                <div key={p.key}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
+                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pPct}%</span>
+                  </div>
+                  {p.tasks.map((t, ti) => {
+                    const tPct = total > 0 ? Math.round((t.totalMin / total) * 100) : 0;
+                    return (
+                      <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, paddingLeft: 2, marginBottom: 2 }}>
+                        <div style={{ width: 7, height: 7, borderRadius: 999, background: shades[ti], flexShrink: 0 }}/>
+                        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', flex: 1 }}>{t.label}</span>
+                        <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{tPct}%</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
-      </div>
-      {/* HOLD */}
-      <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 8, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#FF6B6B', fontFamily: 'var(--font-inter)' }}>HOLD</span>
-          <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-            {shiftData.holds.length} {shiftData.holds.length === 1 ? 'переход' : 'перехода'}
-          </span>
-          <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'var(--font-inter)' }}>
-            <span style={{ color: T.textDim }}>Итого: </span>
-            <span style={{ fontWeight: 700, color: T.text }}>{holdTotal} мин</span>
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+      ) : (
+        /* Холды */
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {shiftData.holds.map((h, i) => (
-            <div key={i} style={{ fontSize: 10, fontFamily: 'var(--font-inter)', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.25)', borderRadius: 6, padding: '3px 7px', color: '#FF8E8E' }}>
-              #{i + 1} · {h.durationMin} мин
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: dark ? 'rgba(255,107,107,0.07)' : 'rgba(220,53,53,0.06)', borderRadius: 10, border: `1px solid ${dark ? 'rgba(255,107,107,0.18)' : 'rgba(196,43,43,0.15)'}` }}>
+              <span style={{ fontSize: 12, color: T.text, fontFamily: 'var(--font-inter)' }}>{h.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#FF8E8E', fontFamily: 'var(--font-inter)', flexShrink: 0 }}>{h.durationMin} мин</span>
             </div>
           ))}
+          <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{fmtHoldTotal(holdTotal)}</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -401,37 +455,83 @@ function MonthCircle({ label, pct, animDelay, size = 80 }: {
   );
 }
 
+const PROC_META = [
+  { key: 'post',   short: 'Пост', color: '#3B82F6' },
+  { key: 'online', short: 'Онл',  color: '#10B981' },
+  { key: 'rehab',  short: 'Реаб', color: '#94A3B8' },
+] as const;
+
 /* ── ОБОРОТ «КВАРТАЛ» ── */
-function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gradTo: string; tasks: TaskData[]; months: QtrMonth[] }) {
+function MonthlyBack({ tasks, months }: { tasks: TaskData[]; months: QtrMonth[] }) {
   const { T } = useTheme();
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
+
+  // Итоговое % по процессам за квартал (взвешенное по fact)
+  const totalFact = months.reduce((s, m) => s + m.fact, 0);
+  const qtrSplit = totalFact > 0
+    ? {
+        post:   months.reduce((s, m) => s + m.procSplit.post   * m.fact, 0) / totalFact,
+        online: months.reduce((s, m) => s + m.procSplit.online * m.fact, 0) / totalFact,
+        rehab:  months.reduce((s, m) => s + m.procSplit.rehab  * m.fact, 0) / totalFact,
+      }
+    : { post: 0.5, online: 0.33, rehab: 0.17 };
+
   return (
-    <div style={{ display: 'flex', gap: 16, height: '100%', alignItems: 'center' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 14, height: '100%' }}>
+      {/* Кружки месяцев + разбивка по процессам */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
         {months.map((m, i) => {
           const mPct = m.fact / m.plan;
-          return <MonthCircle key={m.label} label={m.short} pct={mPct} animDelay={i * 80} size={86}/>;
+          return (
+            <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <MonthCircle label={m.short} pct={mPct} animDelay={i * 80} size={76}/>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {PROC_META.map(p => (
+                  <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
+                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
+                      {Math.round(m.procSplit[p.key] * 100)}% {p.short}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
         })}
+        {/* Итог за квартал */}
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>За квартал</span>
+          {PROC_META.map(p => (
+            <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
+              <span style={{ fontSize: 10, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
+                {Math.round(qtrSplit[p.key] * 100)}% {p.short}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 13, minWidth: 0 }}>
+      {/* Задачи квартала с отдельными цветами */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
         {tasks.filter(t => t.count > 0).map((task, i) => {
           const share  = task.totalMin / qtrTotal;
           const minPer = Math.round(task.totalMin / task.count);
+          const barC   = TASK_BAR_COLORS[i] ?? '#3B82F6';
           return (
             <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 12, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>зад × {minPer} мин</span>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>× {minPer} мин</span>
                 </div>
               </div>
               <div style={{ height: 6, borderRadius: 999, background: T.track, overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
-                  background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`,
+                  background: `linear-gradient(90deg, ${barC}99, ${barC})`,
                   width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
                   transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
@@ -439,10 +539,10 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
             </div>
           );
         })}
-        <div style={{ marginTop: 3, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} задач · {fmtN(qtrTotal)} мин
+            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} задач
           </span>
         </div>
       </div>
@@ -455,8 +555,9 @@ interface RingProps {
   id: string; plan: number; fact: number; displayPlan?: number; displayFact?: number;
   title: string; dateLabel?: string; note?: string; subtitle?: string; planLabel?: string; factLabel?: string;
   backContent: React.ReactNode;
+  colorOverride?: { from: string; to: string; rgb: string };
 }
-function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dateLabel, note, subtitle = 'продуктивность', planLabel = 'План', factLabel = 'Факт', backContent }: RingProps) {
+function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dateLabel, note, subtitle = 'продуктивность', planLabel = 'План', factLabel = 'Факт', backContent, colorOverride }: RingProps) {
   const [flipped, setFlipped] = useState(false);
   const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
@@ -464,7 +565,8 @@ function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dat
   const animFact = useCount(fact);
   const animPlan = useCount(displayPlan ?? plan);
   const pct  = plan > 0 ? Math.min(fact / plan, 1) : 0;
-  const rgb  = pctRgb(pct);
+  const theme = colorOverride ?? ringTheme(pct);
+  const rgb  = theme.rgb;
   const R = 88; const CX = 120; const CY = 120; const SW = 20;
   const cardBg = dark
     ? `linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 42%, rgba(255,255,255,0.02) 100%)`
@@ -495,8 +597,8 @@ function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dat
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
             <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
               <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
-              <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
-              <text x={CX} y={CY + 5} textAnchor="middle" fill={ringTheme(pct).to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
+              <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60} themeOverride={colorOverride}/>
+              <text x={CX} y={CY + 5} textAnchor="middle" fill={theme.to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
               {subtitle && <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">{subtitle}</text>}
             </svg>
             <div style={{ height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -676,6 +778,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           plan={emp.todayPlan} fact={emp.todayFact}
           title="Выполнено за смену"
           subtitle="прогресс"
+          colorOverride={GRAY_RING}
           backContent={<ShiftBack shiftData={emp.shiftData}/>}
         />
         <ProductivityRing
@@ -684,7 +787,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           title="Среднее за квартал" dateLabel="С 21 марта" planLabel="Средний план за смену" displayPlan={360}
           factLabel="Средний факт за смену" displayFact={Math.round(emp.qtrFact / QTR_WD_ELAPSED)}
           note={`До конца квартала ${DAYS_REMAINING} дней`}
-          backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
+          backContent={<MonthlyBack tasks={emp.qtrTasks} months={emp.months}/>}
         />
       </div>
     </div>
