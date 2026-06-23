@@ -113,9 +113,9 @@ function makeMonths(qtrFact: number): QtrMonth[] {
 /* ── СОТРУДНИКИ ── */
 function makeShiftData(todayFact: number): ShiftData {
   const procs = [
-    { key: 'post',   label: 'Пост',         color: '#3B82F6', colorFrom: '#1E3A8A', colorTo: '#93C5FD', share: 0.50 },
-    { key: 'online', label: 'Онлайн',       color: '#10B981', colorFrom: '#064E3B', colorTo: '#6EE7B7', share: 0.30 },
-    { key: 'rehab',  label: 'Реабилитация', color: '#94A3B8', colorFrom: '#0F172A', colorTo: '#E2E8F0', share: 0.20 },
+    { key: 'post',   label: 'Пост',         color: '#3B82F6', colorFrom: '#60A5FA', colorTo: '#1D4ED8', share: 0.50 },
+    { key: 'online', label: 'Онлайн',       color: '#10B981', colorFrom: '#34D399', colorTo: '#065F46', share: 0.30 },
+    { key: 'rehab',  label: 'Реабилитация', color: '#94A3B8', colorFrom: '#94A3B8', colorTo: '#1E293B', share: 0.20 },
   ];
   const cmplx = [
     { label: 'Простые', share: 0.60, minPer:  6 },
@@ -286,8 +286,9 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
       <defs>
         {segs.map(seg => {
-          const [x1, y1] = toXY(R, seg.startAngle + GAP / 2);
-          const [x2, y2] = toXY(R, seg.startAngle + seg.sweep - GAP / 2);
+          const mid = seg.startAngle + seg.sweep / 2;
+          const [x1, y1] = toXY(r, mid);
+          const [x2, y2] = toXY(R, mid);
           return (
             <linearGradient key={seg.key} id={`pg-${seg.key}`}
               gradientUnits="userSpaceOnUse"
@@ -308,15 +309,26 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
             {d && <path d={d} fill={`url(#pg-${seg.key})`}/>}
-            {count > 0 && seg.sweep > 18 && (
-              <text x={tx.toFixed(1)} y={ty.toFixed(1)}
-                textAnchor="middle" dominantBaseline="middle"
-                fill="#fff" fontSize={Math.round((R - r) * 0.42)} fontWeight="700"
-                fontFamily="var(--font-manrope)"
-                style={{ pointerEvents: 'none' }}>
-                {count}
-              </text>
-            )}
+            {count > 0 && seg.sweep > 18 && (() => {
+              const fs = Math.round((R - r) * 0.40);
+              const letter = seg.label.charAt(0);
+              return (
+                <>
+                  <text x={tx.toFixed(1)} y={(ty - fs * 0.7).toFixed(1)}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fill="rgba(255,255,255,0.65)" fontSize={Math.round(fs * 0.7)} fontWeight="600"
+                    fontFamily="var(--font-inter)" style={{ pointerEvents: 'none' }}>
+                    {letter}
+                  </text>
+                  <text x={tx.toFixed(1)} y={(ty + fs * 0.55).toFixed(1)}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fill="#fff" fontSize={fs} fontWeight="700"
+                    fontFamily="var(--font-manrope)" style={{ pointerEvents: 'none' }}>
+                    {count}
+                  </text>
+                </>
+              );
+            })()}
           </g>
         );
       })}
