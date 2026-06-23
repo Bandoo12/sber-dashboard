@@ -469,27 +469,42 @@ const PROC_META = [
 ] as const;
 
 /* ── ОБОРОТ «КВАРТАЛ» ── */
-function MonthlyBack({ tasks, months, qtrPct }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
+function MonthlyBack({ tasks, months, qtrPct: _ }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
   const { T } = useTheme();
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
-  // Цвет баров по прогрессу сотрудника: зелёный / оранжевый / красный
-  const barColor = ringTheme(qtrPct).from;
+  const activeTasks = tasks.filter(t => t.count > 0);
 
   return (
-    <div style={{ display: 'flex', gap: 14, height: '100%', alignItems: 'center' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 12, height: '100%' }}>
+      {/* Кружки месяцев + разбивка по процессам */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, justifyContent: 'space-evenly' }}>
         {months.map((m, i) => (
-          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={76}/>
+          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={72}/>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {PROC_META.map(p => (
+                <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
+                    {Math.round(m.procSplit[p.key] * 100)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
-        {tasks.filter(t => t.count > 0).map((task, i) => {
-          const share  = task.totalMin / qtrTotal;
-          const minPer = Math.round(task.totalMin / task.count);
+      {/* Задачи квартала — цвет каждого бара = прогресс соответствующего месяца */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 9, minWidth: 0, justifyContent: 'center' }}>
+        {activeTasks.map((task, i) => {
+          const share    = task.totalMin / qtrTotal;
+          const minPer   = Math.round(task.totalMin / task.count);
+          const mPct     = months[i] ? months[i].fact / months[i].plan : 0;
+          const barColor = ringTheme(mPct).from;
           return (
-            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -508,7 +523,7 @@ function MonthlyBack({ tasks, months, qtrPct }: { tasks: TaskData[]; months: Qtr
             </div>
           );
         })}
-        <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ paddingTop: 8, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
             {fmtN(tasks.reduce((s,t) => s+t.count, 0))} задач
