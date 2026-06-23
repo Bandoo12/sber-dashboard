@@ -392,7 +392,7 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
         <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
           {/* Pie: процесс × тип задачи */}
           <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <PieChart processes={pieSegs} size={138}/>
+            <PieChart processes={pieSegs} size={152}/>
           </div>
           <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
           {/* Легенда по процессам + задачам с оттенками */}
