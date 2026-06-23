@@ -162,9 +162,9 @@ const EMPLOYEES: Employee[] = [
 /* ── HELPERS ── */
 // 3 фиксированные темы: зелёный / оранжевый / красный
 function ringTheme(p: number): { from: string; to: string; rgb: string } {
-  if (p >= 0.66) return { from: '#1A6C38', to: '#50E880', rgb: '26,108,56'  }; // зелёный (светлее на 10%) → ярко-светлый
-  if (p >= 0.33) return { from: '#974E1A', to: '#FFB84A', rgb: '151,78,26'  }; // оранжевый (светлее на 10%) → светлый
-  return           { from: '#971A1A',  to: '#FF2D2D', rgb: '151,26,26'       }; // красный (светлее на 10%) → насыщенный
+  if (p >= 0.66) return { from: '#22C55E', to: '#86EFAC', rgb: '34,197,94'   }; // зелёный
+  if (p >= 0.33) return { from: '#F97316', to: '#FDE68A', rgb: '249,115,22'  }; // оранжевый
+  return           { from: '#EF4444',  to: '#FCA5A5', rgb: '239,68,68'       }; // красный
 }
 function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
@@ -306,29 +306,25 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
         const mid = seg.startAngle + seg.sweep / 2;
         const [tx, ty] = toXY(midR, mid);
         const d = arcPath(seg.startAngle, seg.startAngle + seg.sweep);
+        const capR = (R - r) / 2;
+        const s0 = seg.startAngle + GAP / 2;
+        const e0 = seg.startAngle + seg.sweep - GAP / 2;
+        const [scx, scy] = toXY(midR, s0);
+        const [ecx, ecy] = toXY(midR, e0);
+        const fs = Math.round((R - r) * 0.42);
         return (
           <g key={seg.key} opacity={ready ? 1 : 0} style={{ transition: `opacity 350ms ease ${i * 100}ms` }}>
             {d && <path d={d} fill={`url(#pg-${seg.key})`}/>}
-            {count > 0 && seg.sweep > 18 && (() => {
-              const fs = Math.round((R - r) * 0.40);
-              const letter = seg.label.charAt(0);
-              return (
-                <>
-                  <text x={tx.toFixed(1)} y={(ty - fs * 0.7).toFixed(1)}
-                    textAnchor="middle" dominantBaseline="middle"
-                    fill="rgba(255,255,255,0.65)" fontSize={Math.round(fs * 0.7)} fontWeight="600"
-                    fontFamily="var(--font-inter)" style={{ pointerEvents: 'none' }}>
-                    {letter}
-                  </text>
-                  <text x={tx.toFixed(1)} y={(ty + fs * 0.55).toFixed(1)}
-                    textAnchor="middle" dominantBaseline="middle"
-                    fill="#fff" fontSize={fs} fontWeight="700"
-                    fontFamily="var(--font-manrope)" style={{ pointerEvents: 'none' }}>
-                    {count}
-                  </text>
-                </>
-              );
-            })()}
+            {d && <circle cx={scx.toFixed(2)} cy={scy.toFixed(2)} r={capR.toFixed(2)} fill={`url(#pg-${seg.key})`}/>}
+            {d && <circle cx={ecx.toFixed(2)} cy={ecy.toFixed(2)} r={capR.toFixed(2)} fill={`url(#pg-${seg.key})`}/>}
+            {count > 0 && seg.sweep > 22 && (
+              <text x={tx.toFixed(1)} y={ty.toFixed(1)}
+                textAnchor="middle" dominantBaseline="middle"
+                fill="#fff" fontSize={fs} fontWeight="700"
+                fontFamily="var(--font-manrope)" style={{ pointerEvents: 'none' }}>
+                {count}
+              </text>
+            )}
           </g>
         );
       })}
@@ -337,32 +333,53 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
 }
 
 /* ── ОБОРОТ «СМЕНА» ── */
+const TASK_DEFS = [
+  { key: 'simple',  label: 'Простые', color: '#10B981', colorFrom: '#34D399', colorTo: '#059669', idx: 0 },
+  { key: 'medium',  label: 'Средние', color: '#3B82F6', colorFrom: '#60A5FA', colorTo: '#1D4ED8', idx: 1 },
+  { key: 'complex', label: 'Сложные', color: '#F59E0B', colorFrom: '#FDE68A', colorTo: '#D97706', idx: 2 },
+];
+
 function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
   const { T } = useTheme();
   const holdTotal = shiftData.holds.reduce((s, h) => s + h.durationMin, 0);
+
+  const taskTypeProcs: ShiftProcess[] = TASK_DEFS.map(td => ({
+    key: td.key, label: td.label, color: td.color, colorFrom: td.colorFrom, colorTo: td.colorTo,
+    totalMin: shiftData.processes.reduce((s, p) => s + (p.tasks[td.idx]?.totalMin ?? 0), 0),
+    tasks: [{ label: td.label, count: shiftData.processes.reduce((s, p) => s + (p.tasks[td.idx]?.count ?? 0), 0), totalMin: 0 }],
+  }));
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
       <div style={{ fontSize: 10, color: T.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-inter)' }}>Задачи за смену</div>
       <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
-        {/* Pie */}
+        {/* Pie по типам задач */}
         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <PieChart processes={shiftData.processes} size={140}/>
+          <PieChart processes={taskTypeProcs} size={140}/>
         </div>
         <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
-        {/* Сгруппированные задачи */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7, minWidth: 0 }}>
+        {/* Легенда + разбивка по процессам */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+          {/* Легенда типов задач */}
+          {taskTypeProcs.map(t => (
+            <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 7, height: 7, borderRadius: 999, background: t.color, flexShrink: 0 }}/>
+              <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)', flex: 1 }}>{t.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{t.tasks[0].count}</span>
+            </div>
+          ))}
+          <div style={{ height: 1, background: T.border, margin: '3px 0' }}/>
+          {/* Разбивка по процессам */}
           {shiftData.processes.map(p => (
             <div key={p.key}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                <div style={{ width: 6, height: 6, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
-                <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 1 }}>
+                <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
               </div>
               {p.tasks.map(t => (
-                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingLeft: 11, marginBottom: 1 }}>
-                  <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
-                  <span style={{ fontSize: 11, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
-                    <span style={{ color: T.text, fontWeight: 600 }}>{t.count}</span>
-                  </span>
+                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingLeft: 10, marginBottom: 0 }}>
+                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
+                  <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{t.count}</span>
                 </div>
               ))}
             </div>
@@ -429,7 +446,7 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
       </div>
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 13, minWidth: 0 }}>
-        {tasks.map((task, i) => {
+        {tasks.filter(t => t.count > 0).map((task, i) => {
           const share  = task.totalMin / qtrTotal;
           const minPer = Math.round(task.totalMin / task.count);
           return (
