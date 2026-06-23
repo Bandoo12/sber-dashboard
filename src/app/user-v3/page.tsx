@@ -38,7 +38,7 @@ const LIGHT_T = {
   greenAct:   '#008838',
   yellow:     '#C08000',
   red:        '#C42B2B',
-  track:      'rgba(0,0,0,0.13)',
+  track:      'rgba(0,0,0,0.22)',
   tabBg:      'rgba(0,0,0,0.08)',
   statBg:     'rgba(0,0,0,0.055)',
   statBorder: 'rgba(0,0,0,0.14)',
@@ -484,12 +484,9 @@ function MonthlyBack({ tasks, months, qtrPct: _ }: { tasks: TaskData[]; months: 
             <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={72}/>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {PROC_META.map(p => (
-                <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
-                    {Math.round(m.procSplit[p.key] * 100)}%
-                  </span>
-                </div>
+                <span key={p.key} style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
+                  {Math.round(m.procSplit[p.key] * 100)}%
+                </span>
               ))}
             </div>
           </div>
@@ -501,8 +498,7 @@ function MonthlyBack({ tasks, months, qtrPct: _ }: { tasks: TaskData[]; months: 
         {activeTasks.map((task, i) => {
           const share    = task.totalMin / qtrTotal;
           const minPer   = Math.round(task.totalMin / task.count);
-          const mPct     = months[i] ? months[i].fact / months[i].plan : 0;
-          const barColor = ringTheme(mPct).from;
+          const barColor = i === 0 ? '#10B981' : '#EF4444';
           return (
             <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -582,14 +578,14 @@ function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dat
             <svg viewBox={`0 0 ${CX*2} ${CY*2}`} width={CX*2} height={CY*2} style={{ display: 'block', overflow: 'visible' }}>
               <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
               <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60} themeOverride={colorOverride}/>
-              <text x={CX} y={CY + 5} textAnchor="middle" fill={theme.to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
+              <text x={CX} y={CY + 5} textAnchor="middle" fill={dark ? theme.to : theme.from} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
               {subtitle && <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">{subtitle}</text>}
             </svg>
             <div style={{ height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {note && <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)', textAlign: 'center' }}>{note}</div>}
             </div>
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-              {[{ label: factLabel, val: displayFact !== undefined ? displayFact : animFact, c: ringTheme(pct).to }, { label: planLabel, val: animPlan, c: T.text }].map(({ label, val, c }) => (
+              {[{ label: factLabel, val: displayFact !== undefined ? displayFact : animFact, c: dark ? ringTheme(pct).to : ringTheme(pct).from }, { label: planLabel, val: animPlan, c: T.text }].map(({ label, val, c }) => (
                 <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
                   <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
