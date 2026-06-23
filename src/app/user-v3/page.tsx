@@ -386,7 +386,7 @@ function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note,
               {note && <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)', textAlign: 'center' }}>{note}</div>}
             </div>
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-              {[{ label: 'Факт', val: animFact, c: pctColor(pct, T) }, { label: planLabel, val: animPlan, c: T.textMuted }].map(({ label, val, c }) => (
+              {[{ label: 'Факт', val: animFact, c: ringTheme(pct).to }, { label: planLabel, val: animPlan, c: T.text }].map(({ label, val, c }) => (
                 <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
                   <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
