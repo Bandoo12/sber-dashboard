@@ -284,8 +284,8 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
 
-  // Точный зазор: caps ровно касаются — δ = 2·arctan(sw/2R), GAP = R·δ
-  const GAP_ARC = 2 * R * Math.atan(sw / (2 * R));
+  // 2px зазор между внешними краями сегментов — визуально касаются
+  const GAP_ARC = 2;
   const GAP_DEG = (GAP_ARC / circ) * 360;
 
   const toXY = (radius: number, deg: number): [number, number] => {
@@ -469,63 +469,25 @@ const PROC_META = [
 ] as const;
 
 /* ── ОБОРОТ «КВАРТАЛ» ── */
-function MonthlyBack({ tasks, months }: { tasks: TaskData[]; months: QtrMonth[] }) {
+function MonthlyBack({ tasks, months, qtrPct }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
   const { T } = useTheme();
   const ready    = useReady(200);
   const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
-
-  // Итоговое % по процессам за квартал (взвешенное по fact)
-  const totalFact = months.reduce((s, m) => s + m.fact, 0);
-  const qtrSplit = totalFact > 0
-    ? {
-        post:   months.reduce((s, m) => s + m.procSplit.post   * m.fact, 0) / totalFact,
-        online: months.reduce((s, m) => s + m.procSplit.online * m.fact, 0) / totalFact,
-        rehab:  months.reduce((s, m) => s + m.procSplit.rehab  * m.fact, 0) / totalFact,
-      }
-    : { post: 0.5, online: 0.33, rehab: 0.17 };
+  // Цвет баров по прогрессу сотрудника: зелёный / оранжевый / красный
+  const barColor = ringTheme(qtrPct).from;
 
   return (
-    <div style={{ display: 'flex', gap: 14, height: '100%' }}>
-      {/* Кружки месяцев + разбивка по процессам */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
-        {months.map((m, i) => {
-          const mPct = m.fact / m.plan;
-          return (
-            <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MonthCircle label={m.short} pct={mPct} animDelay={i * 80} size={76}/>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {PROC_META.map(p => (
-                  <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
-                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
-                      {Math.round(m.procSplit[p.key] * 100)}% {p.short}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-        {/* Итог за квартал */}
-        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>За квартал</span>
-          {PROC_META.map(p => (
-            <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 5, height: 5, borderRadius: 999, background: p.color, flexShrink: 0 }}/>
-              <span style={{ fontSize: 10, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-                {Math.round(qtrSplit[p.key] * 100)}% {p.short}
-              </span>
-            </div>
-          ))}
-        </div>
+    <div style={{ display: 'flex', gap: 14, height: '100%', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+        {months.map((m, i) => (
+          <MonthCircle key={m.label} label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={76}/>
+        ))}
       </div>
       <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
-      {/* Задачи квартала с отдельными цветами */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
         {tasks.filter(t => t.count > 0).map((task, i) => {
           const share  = task.totalMin / qtrTotal;
           const minPer = Math.round(task.totalMin / task.count);
-          const barC   = TASK_BAR_COLORS[i] ?? '#3B82F6';
           return (
             <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -538,7 +500,7 @@ function MonthlyBack({ tasks, months }: { tasks: TaskData[]; months: QtrMonth[] 
               <div style={{ height: 6, borderRadius: 999, background: T.track, overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
-                  background: `linear-gradient(90deg, ${barC}99, ${barC})`,
+                  background: `linear-gradient(90deg, ${barColor}99, ${barColor})`,
                   width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
                   transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                 }}/>
@@ -794,7 +756,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           title="Среднее за квартал" dateLabel="С 21 марта" planLabel="Средний план за смену" displayPlan={360}
           factLabel="Средний факт за смену" displayFact={Math.round(emp.qtrFact / QTR_WD_ELAPSED)}
           note={`До конца квартала ${DAYS_REMAINING} дней`}
-          backContent={<MonthlyBack tasks={emp.qtrTasks} months={emp.months}/>}
+          backContent={<MonthlyBack tasks={emp.qtrTasks} months={emp.months} qtrPct={qtrPct}/>}
         />
       </div>
     </div>
