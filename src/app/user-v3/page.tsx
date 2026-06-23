@@ -187,6 +187,13 @@ function fmtHoldTotal(mins: number): string {
   const m = mins % 60;
   return h > 0 ? `${h}ч ${m}мин` : `${m}мин`;
 }
+// Тёмный или белый текст в зависимости от яркости фона
+function textOnColor(hex: string): string {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.5 ? '#1E293B' : '#FFFFFF';
+}
 function pctRgb(p: number) { return ringTheme(p).rgb; }
 // Линейная интерполяция двух hex-цветов
 function lerpHex(a: string, b: string, t: number): string {
@@ -277,8 +284,8 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
 
-  // Точный зазор: caps ровно касаются — 2R·arcsin(sw/2R) = длина дуги до конца шапки
-  const GAP_ARC = 2 * R * Math.asin(Math.min(sw / (2 * R), 1));
+  // Точный зазор: caps ровно касаются — δ = 2·arctan(sw/2R), GAP = R·δ
+  const GAP_ARC = 2 * R * Math.atan(sw / (2 * R));
   const GAP_DEG = (GAP_ARC / circ) * 360;
 
   const toXY = (radius: number, deg: number): [number, number] => {
@@ -321,7 +328,7 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
             {pctVal > 0 && seg.sweep > 28 && (
               <text x={tx.toFixed(1)} y={ty.toFixed(1)}
                 textAnchor="middle" dominantBaseline="middle"
-                fill="#fff" fontSize={fs} fontWeight="700"
+                fill={textOnColor(seg.color)} fontSize={fs} fontWeight="700"
                 fontFamily="var(--font-manrope)" style={{ pointerEvents: 'none' }}>
                 {pctVal}%
               </text>
