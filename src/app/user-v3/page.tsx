@@ -336,10 +336,10 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
 /* ── БОЛЬШОЕ КОЛЬЦО С ФЛИПОМ ── */
 interface RingProps {
   id: string; plan: number; fact: number; displayPlan?: number;
-  title: string; dateLabel?: string; note?: string; hideSubtitle?: boolean; planLabel?: string;
+  title: string; dateLabel?: string; note?: string; subtitle?: string; planLabel?: string;
   backContent: React.ReactNode;
 }
-function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note, hideSubtitle, planLabel = 'План', backContent }: RingProps) {
+function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note, subtitle = 'продуктивность', planLabel = 'План', backContent }: RingProps) {
   const [flipped, setFlipped] = useState(false);
   const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
@@ -380,7 +380,7 @@ function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note,
               <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
               <SegmentedRingArc id={`pr-${id}`} cx={CX} cy={CY} r={R} sw={SW} pct={pct} dark={dark} ready={ready} duration={1200} n={60}/>
               <text x={CX} y={CY + 5} textAnchor="middle" fill={ringTheme(pct).to} fontSize="44" fontWeight="700" fontFamily="var(--font-manrope)" letterSpacing="-2">{fmtPct(pct)}</text>
-              {!hideSubtitle && <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">продуктивность</text>}
+              {subtitle && <text x={CX} y={CY + 24} textAnchor="middle" fill={T.textDim} fontSize="11" fontFamily="var(--font-inter)">{subtitle}</text>}
             </svg>
             <div style={{ height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {note && <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)', textAlign: 'center' }}>{note}</div>}
@@ -558,7 +558,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           id={`${emp.id}-today`}
           plan={emp.todayPlan} fact={emp.todayFact}
           title="Выполнено за смену"
-          hideSubtitle
+          subtitle="прогресс"
           backContent={<TasksBack gradFrom={pctGrad(emp.todayFact / emp.todayPlan, T).from} gradTo={pctGrad(emp.todayFact / emp.todayPlan, T).to} tasks={emp.todayTasks}/>}
         />
         <ProductivityRing
