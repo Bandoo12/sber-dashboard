@@ -251,7 +251,7 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
   const R = size * 0.46;
   const r = size * 0.26;
   const midR = (R + r) / 2;
-  const GAP = 3;
+  const GAP = 8;
 
   const total = processes.reduce((s, p) => s + p.totalMin, 0);
   if (total === 0) return <svg width={size} height={size}/>;
@@ -362,7 +362,6 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
                   <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
                   <span style={{ fontSize: 11, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
                     <span style={{ color: T.text, fontWeight: 600 }}>{t.count}</span>
-                    <span style={{ color: T.textDim }}> · {t.totalMin}м</span>
                   </span>
                 </div>
               ))}
@@ -466,11 +465,11 @@ function MonthlyBack({ gradFrom, gradTo, tasks, months }: { gradFrom: string; gr
 
 /* ── БОЛЬШОЕ КОЛЬЦО С ФЛИПОМ ── */
 interface RingProps {
-  id: string; plan: number; fact: number; displayPlan?: number;
-  title: string; dateLabel?: string; note?: string; subtitle?: string; planLabel?: string;
+  id: string; plan: number; fact: number; displayPlan?: number; displayFact?: number;
+  title: string; dateLabel?: string; note?: string; subtitle?: string; planLabel?: string; factLabel?: string;
   backContent: React.ReactNode;
 }
-function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note, subtitle = 'продуктивность', planLabel = 'План', backContent }: RingProps) {
+function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dateLabel, note, subtitle = 'продуктивность', planLabel = 'План', factLabel = 'Факт', backContent }: RingProps) {
   const [flipped, setFlipped] = useState(false);
   const [hov, setHov] = useState(false);
   const { T, dark } = useTheme();
@@ -517,7 +516,7 @@ function ProductivityRing({ id, plan, fact, displayPlan, title, dateLabel, note,
               {note && <div style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)', textAlign: 'center' }}>{note}</div>}
             </div>
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-              {[{ label: 'Факт', val: animFact, c: ringTheme(pct).to }, { label: planLabel, val: animPlan, c: T.text }].map(({ label, val, c }) => (
+              {[{ label: factLabel, val: displayFact !== undefined ? displayFact : animFact, c: ringTheme(pct).to }, { label: planLabel, val: animPlan, c: T.text }].map(({ label, val, c }) => (
                 <div key={label} style={{ flex: 1, background: T.statBg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${T.statBorder}` }}>
                   <div style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', marginBottom: 3 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
@@ -696,6 +695,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
           id={`${emp.id}-qtr`}
           plan={QTR_PLAN_TO_DATE} fact={emp.qtrFact}
           title="Среднее за квартал" dateLabel="С 21 марта" planLabel="Средний план за смену" displayPlan={360}
+          factLabel="Средний факт за смену" displayFact={Math.round(emp.qtrFact / QTR_WD_ELAPSED)}
           note={`До конца квартала ${DAYS_REMAINING} дней`}
           backContent={<MonthlyBack gradFrom={qtrGrad.from} gradTo={qtrGrad.to} tasks={emp.qtrTasks} months={emp.months}/>}
         />
