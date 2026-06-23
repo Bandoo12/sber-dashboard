@@ -118,15 +118,15 @@ function makeShiftData(todayFact: number): ShiftData {
     { key: 'rehab',  label: 'Реабилитация', color: '#F59E0B', colorFrom: '#92400E', colorTo: '#FCD34D', share: 0.20 },
   ];
   const cmplx = [
-    { label: 'Простые', share: 0.60, minPer: 15 },
-    { label: 'Средние', share: 0.30, minPer: 30 },
-    { label: 'Сложные', share: 0.10, minPer: 60 },
+    { label: 'Простые', share: 0.60, minPer:  6 },
+    { label: 'Средние', share: 0.30, minPer: 15 },
+    { label: 'Сложные', share: 0.10, minPer: 35 },
   ];
   const processes = procs.map(p => {
     const procMin = Math.round(todayFact * p.share);
     const tasks = cmplx.map(c => {
       const totalMin = Math.round(procMin * c.share);
-      const count = Math.max(1, Math.round(totalMin / c.minPer));
+      const count = Math.round(totalMin / c.minPer);
       return { label: c.label, count, totalMin };
     });
     return { key: p.key, label: p.label, color: p.color, colorFrom: p.colorFrom, colorTo: p.colorTo, tasks, totalMin: procMin };
