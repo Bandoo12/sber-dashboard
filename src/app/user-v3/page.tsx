@@ -115,7 +115,7 @@ function makeShiftData(todayFact: number): ShiftData {
   const procs = [
     { key: 'post',   label: 'Пост',         color: '#3B82F6', colorFrom: '#60A5FA', colorTo: '#1D4ED8', share: 0.50 },
     { key: 'online', label: 'Онлайн',       color: '#10B981', colorFrom: '#34D399', colorTo: '#065F46', share: 0.30 },
-    { key: 'rehab',  label: 'Реабилитация', color: '#94A3B8', colorFrom: '#94A3B8', colorTo: '#1E293B', share: 0.20 },
+    { key: 'rehab',  label: 'Реабилитация', color: '#94A3B8', colorFrom: '#E2E8F0', colorTo: '#475569', share: 0.20 },
   ];
   const cmplx = [
     { label: 'Простые', share: 0.60, minPer:  6 },
