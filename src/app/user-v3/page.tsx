@@ -501,7 +501,7 @@ const PROC_META = [
 function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
   const { T } = useTheme();
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 8px', height: '100%', alignContent: 'center' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px 8px', height: '100%', alignContent: 'center' }}>
       {months.map((m, i) => (
         <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={110}/>
