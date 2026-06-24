@@ -18,7 +18,7 @@ const DARK_T = {
   greenAct:   '#00B24B',
   yellow:     '#D9A600',
   red:        '#DC3535',
-  track:      'rgba(255,255,255,0.07)',
+  track:      'rgba(255,255,255,0.13)',
   tabBg:      'rgba(255,255,255,0.05)',
   statBg:     'rgba(255,255,255,0.04)',
   statBorder: 'rgba(255,255,255,0.06)',
@@ -175,7 +175,7 @@ const EMPLOYEES: Employee[] = [
 // 3 фиксированные темы: зелёный / оранжевый / красный
 function ringTheme(p: number): { from: string; to: string; rgb: string } {
   if (p >= 0.66) return { from: '#22C55E', to: '#86EFAC', rgb: '34,197,94'   }; // зелёный
-  if (p >= 0.33) return { from: '#F97316', to: '#FDE68A', rgb: '249,115,22'  }; // оранжевый
+  if (p >= 0.33) return { from: '#F97316', to: '#FB923C', rgb: '249,115,22'  }; // оранжевый
   return           { from: '#EF4444',  to: '#FCA5A5', rgb: '239,68,68'       }; // красный
 }
 // Нейтральная серая расцветка — для кольца «Сегодня»
@@ -340,7 +340,6 @@ function PieChart({ processes, size = 92 }: { processes: ShiftProcess[]; size?: 
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flexShrink: 0 }}>
-      <circle cx={cx} cy={cy} r={R} fill="none" stroke={trackC} strokeWidth={sw}/>
       {segs.map((seg, i) => {
         if (seg.sweep <= GAP_DEG * 1.2) return null;
         const aStart = seg.startAngle + GAP_DEG / 2;
@@ -492,31 +491,57 @@ function MonthCircle({ label, pct, animDelay, size = 80 }: {
 }
 
 const PROC_META = [
-  { key: 'post',   short: 'Пост', color: '#3B82F6' },
-  { key: 'online', short: 'Онл',  color: '#10B981' },
-  { key: 'rehab',  short: 'Реаб', color: '#94A3B8' },
+  { key: 'post',   short: 'Пост',         label: 'Пост',         color: '#3B82F6' },
+  { key: 'online', short: 'Онл',          label: 'Онлайн',       color: '#10B981' },
+  { key: 'rehab',  short: 'Реаб',         label: 'Реабилитация', color: '#94A3B8' },
 ] as const;
 
 /* ── ОБОРОТ «КВАРТАЛ» ── */
 function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
   const { T } = useTheme();
+  const totalFact = months.reduce((s, m) => s + m.fact, 0);
+  const qtrSplit = PROC_META.map(p => ({
+    ...p,
+    pct: totalFact > 0
+      ? months.reduce((s, m) => s + m.fact * (m.procSplit as Record<string, number>)[p.key], 0) / totalFact
+      : 0,
+  }));
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px 8px', height: '100%', alignContent: 'center' }}>
-      {months.map((m, i) => (
-        <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={110}/>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {PROC_META.map(p => (
-              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
-                <span style={{ fontSize: 9, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
-                  {Math.round(m.procSplit[p.key] * 100)}%
-                </span>
-              </div>
-            ))}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px 8px' }}>
+        {months.map((m, i) => (
+          <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={110}/>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {PROC_META.map(p => (
+                <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
+                  <span style={{ fontSize: 9, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
+                    {Math.round(m.procSplit[p.key] * 100)}%
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
+        ))}
+      </div>
+
+      {/* Итого за квартал */}
+      <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 14 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'var(--font-inter)', marginBottom: 8 }}>
+          Итого за квартал
         </div>
-      ))}
+        <div style={{ display: 'flex', gap: 12 }}>
+          {qtrSplit.map(p => (
+            <div key={p.key} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: p.color, fontFamily: 'var(--font-manrope)' }}>
+                {Math.round(p.pct * 100)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
