@@ -505,11 +505,11 @@ function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; mont
       {months.map((m, i) => (
         <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={110}/>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
             {PROC_META.map(p => (
-              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
-                <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
+              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
+                <span style={{ fontSize: 9, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
                   {Math.round(m.procSplit[p.key] * 100)}%
                 </span>
               </div>
