@@ -534,8 +534,8 @@ function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; mont
         <div style={{ display: 'flex', gap: 14, justifyContent: 'center' }}>
           {qtrSplit.map(p => (
             <div key={p.key} style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-              <span style={{ fontSize: 16, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: p.color, fontFamily: 'var(--font-manrope)' }}>
+              <span style={{ fontSize: 12, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: p.color, fontFamily: 'var(--font-manrope)' }}>
                 {Math.round(p.pct * 100)}%
               </span>
             </div>
