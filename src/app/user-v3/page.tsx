@@ -393,7 +393,7 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
     p.tasks.map((t, ti) => {
       const c = (PROC_SHADES[p.key] ?? ['#888','#666','#444'])[ti] ?? '#888';
       return { key: `${p.key}-${ti}`, label: t.label, color: c, colorFrom: c, colorTo: c, totalMin: t.totalMin, tasks: [t] };
-    }).filter(s => s.totalMin > 0)
+    }).filter(s => s.tasks[0].count > 0)
   );
 
   return (
