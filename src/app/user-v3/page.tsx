@@ -515,8 +515,8 @@ function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; mont
             <div style={{ display: 'flex', flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
               {PROC_META.map(p => (
                 <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <span style={{ fontSize: 13, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
-                  <span style={{ fontSize: 13, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
+                  <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
+                  <span style={{ fontSize: 11, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
                     {Math.round(m.procSplit[p.key] * 100)}%
                   </span>
                 </div>
