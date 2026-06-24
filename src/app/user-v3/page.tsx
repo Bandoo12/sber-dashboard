@@ -426,25 +426,24 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
           {/* Легенда по процессам + задачам с оттенками */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflowY: 'auto' }}>
             {shiftData.processes.map(p => {
-              const pMin = p.tasks.reduce((s, t) => s + t.totalMin, 0);
-              const pPct = total > 0 ? Math.round((pMin / total) * 100) : 0;
+              const pMin   = p.tasks.reduce((s, t) => s + t.totalMin, 0);
+              const pCount = p.tasks.reduce((s, t) => s + t.count,    0);
               const shades = PROC_SHADES[p.key] ?? ['#888','#666','#444'];
+              if (pCount === 0) return null;
               return (
                 <div key={p.key}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 3 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
-                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pPct}%</span>
+                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pCount} шт</span>
+                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pMin} мин</span>
                   </div>
-                  {p.tasks.map((t, ti) => {
-                    const tPct = total > 0 ? Math.round((t.totalMin / total) * 100) : 0;
-                    return (
-                      <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, paddingLeft: 2, marginBottom: 2 }}>
-                        <div style={{ width: 7, height: 7, borderRadius: 999, background: shades[ti], flexShrink: 0 }}/>
-                        <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', flex: 1 }}>{t.label}</span>
-                        <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{tPct}%</span>
-                      </div>
-                    );
-                  })}
+                  {p.tasks.filter(t => t.count > 0).map((t, ti) => (
+                    <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, paddingLeft: 2, marginBottom: 2 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: 999, background: shades[ti], flexShrink: 0 }}/>
+                      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', flex: 1 }}>{t.label}</span>
+                      <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{t.count} шт</span>
+                    </div>
+                  ))}
                 </div>
               );
             })}
