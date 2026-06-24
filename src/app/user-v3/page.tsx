@@ -635,17 +635,17 @@ function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dat
 }
 
 /* ── МИНИ-КОЛЬЦО (цвет по проценту) ── */
-function MiniRing({ id, pct, size = 64 }: { id: string; pct: number; size?: number }) {
+function MiniRing({ id, pct, size = 64, colorOverride }: { id: string; pct: number; size?: number; colorOverride?: { from: string; to: string; rgb: string } }) {
   const { T, dark } = useTheme();
   const ready   = useReady(120);
   const R = size * 0.34; const CX = size / 2; const CY = size / 2; const SW = size * 0.1;
   const clamped = Math.min(pct, 1);
-  const glowC   = ringTheme(clamped).from;
+  const theme   = colorOverride ?? ringTheme(clamped);
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <circle cx={CX} cy={CY} r={R} fill="none" stroke={T.track} strokeWidth={SW}/>
-      <SegmentedRingArc id={id} cx={CX} cy={CY} r={R} sw={SW} pct={clamped} dark={dark} ready={ready} n={36}/>
-      <text x={CX} y={CY + 4} textAnchor="middle" fill={glowC} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
+      <SegmentedRingArc id={id} cx={CX} cy={CY} r={R} sw={SW} pct={clamped} dark={dark} ready={ready} n={36} themeOverride={colorOverride}/>
+      <text x={CX} y={CY + 4} textAnchor="middle" fill={dark ? theme.to : theme.from} fontSize={13} fontWeight="700" fontFamily="var(--font-manrope)">{fmtPct(clamped)}</text>
     </svg>
   );
 }
@@ -698,11 +698,11 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
       {/* Два кружка: цвет по %  */}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'space-around' }}>
         {[
-          { label: 'Сегодня',    pct: todayPct, key: 'today' },
-          { label: 'С нач. кв.', pct: qtrPct,   key: 'qtr'   },
+          { label: 'Сегодня',    pct: todayPct, key: 'today', gray: true  },
+          { label: 'С нач. кв.', pct: qtrPct,   key: 'qtr',   gray: false },
         ].map(row => (
           <div key={row.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <MiniRing id={`${emp.id}-${row.key}`} pct={row.pct} size={120}/>
+            <MiniRing id={`${emp.id}-${row.key}`} pct={row.pct} size={120} colorOverride={row.gray ? GRAY_RING : undefined}/>
             <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{row.label}</span>
           </div>
         ))}
