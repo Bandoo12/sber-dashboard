@@ -38,7 +38,7 @@ const LIGHT_T = {
   greenAct:   '#008838',
   yellow:     '#C08000',
   red:        '#C42B2B',
-  track:      'rgba(0,0,0,0.15)',
+  track:      'rgba(0,0,0,0.12)',
   tabBg:      'rgba(0,0,0,0.08)',
   statBg:     'rgba(0,0,0,0.038)',
   statBorder: 'rgba(0,0,0,0.14)',
