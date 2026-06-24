@@ -303,9 +303,9 @@ function donutSegPath(
     `A ${f(Ro)} ${f(Ro)} 0 ${lgo} 1 ${f(O2x)},${f(O2y)}`,
     `A ${f(cro)} ${f(cro)} 0 0 1 ${f(ECOx)},${f(ECOy)}`,
     `L ${f(ECIx)},${f(ECIy)}`,
-    `A ${f(cri)} ${f(cri)} 0 0 0 ${f(I2x)},${f(I2y)}`,
+    `A ${f(cri)} ${f(cri)} 0 0 1 ${f(I2x)},${f(I2y)}`,
     `A ${f(Ri)} ${f(Ri)} 0 ${lgi} 0 ${f(I1x)},${f(I1y)}`,
-    `A ${f(cri)} ${f(cri)} 0 0 0 ${f(SCIx)},${f(SCIy)}`,
+    `A ${f(cri)} ${f(cri)} 0 0 1 ${f(SCIx)},${f(SCIy)}`,
     `L ${f(SCOx)},${f(SCOy)}`,
     `A ${f(cro)} ${f(cro)} 0 0 1 ${f(O1x)},${f(O1y)}`,
     'Z',
@@ -424,7 +424,7 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
           </div>
           <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
           {/* Легенда по процессам + задачам с оттенками */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflowY: 'auto' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflowY: 'auto', justifyContent: 'center' }}>
             {shiftData.processes.map(p => {
               const pMin   = p.tasks.reduce((s, t) => s + t.totalMin, 0);
               const pCount = p.tasks.reduce((s, t) => s + t.count,    0);
@@ -498,63 +498,25 @@ const PROC_META = [
 ] as const;
 
 /* ── ОБОРОТ «КВАРТАЛ» ── */
-function MonthlyBack({ tasks, months, qtrPct: _ }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
+function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; months: QtrMonth[]; qtrPct: number }) {
   const { T } = useTheme();
-  const ready    = useReady(200);
-  const qtrTotal = tasks.reduce((s, t) => s + t.totalMin, 0);
-  const activeTasks = tasks.filter(t => t.count > 0);
-
   return (
-    <div style={{ display: 'flex', gap: 12, height: '100%' }}>
-      {/* Кружки месяцев + разбивка по процессам */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, justifyContent: 'space-evenly' }}>
-        {months.map((m, i) => (
-          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={72}/>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {PROC_META.map(p => (
-                <span key={p.key} style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 8px', height: '100%', alignContent: 'center' }}>
+      {months.map((m, i) => (
+        <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <MonthCircle label={m.short} pct={m.fact / m.plan} animDelay={i * 80} size={110}/>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            {PROC_META.map(p => (
+              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.short}</span>
+                <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>
                   {Math.round(m.procSplit[p.key] * 100)}%
                 </span>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div style={{ width: 1, alignSelf: 'stretch', background: T.border, flexShrink: 0 }}/>
-      {/* Задачи квартала — цвет каждого бара = прогресс соответствующего месяца */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 9, minWidth: 0, justifyContent: 'center' }}>
-        {activeTasks.map((task, i) => {
-          const share    = task.totalMin / qtrTotal;
-          const minPer   = Math.round(task.totalMin / task.count);
-          const barColor = i === 0 ? '#10B981' : '#EF4444';
-          return (
-            <div key={task.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 11, color: T.textMuted, fontFamily: 'var(--font-inter)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '55%' }}>{task.label}</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-inter)' }}>{fmtN(task.count)}</span>
-                  <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>× {minPer} мин</span>
-                </div>
-              </div>
-              <div style={{ height: 6, borderRadius: 999, background: T.track, overflow: 'hidden', position: 'relative' }}>
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999,
-                  background: `linear-gradient(90deg, ${barColor}99, ${barColor})`,
-                  width: ready ? `${Math.min(share * 100, 100)}%` : '0%',
-                  transition: `width 750ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
-                }}/>
-              </div>
-            </div>
-          );
-        })}
-        <div style={{ paddingTop: 8, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 11, color: T.textDim, fontFamily: 'var(--font-inter)' }}>Итого</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontFamily: 'var(--font-inter)' }}>
-            {fmtN(tasks.reduce((s,t) => s+t.count, 0))} задач
-          </span>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
