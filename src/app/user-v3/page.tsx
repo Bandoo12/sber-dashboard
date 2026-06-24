@@ -381,19 +381,15 @@ const SHIFT_TAB_LABELS = [
 ] as const;
 type ShiftTab = 'tasks' | 'holds';
 
+function hexRgb(h: string) {
+  return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(',');
+}
+
 function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
   const [tab, setTab] = useState<ShiftTab>('tasks');
   const { T, dark } = useTheme();
   const holdTotal = shiftData.holds.reduce((s, h) => s + h.durationMin, 0);
   const total = shiftData.processes.reduce((s, p) => s + p.totalMin, 0);
-
-  // 9 сегментов (процесс × тип задачи), только с totalMin > 0
-  const pieSegs: ShiftProcess[] = shiftData.processes.flatMap(p =>
-    p.tasks.map((t, ti) => {
-      const c = (PROC_SHADES[p.key] ?? ['#888','#666','#444'])[ti] ?? '#888';
-      return { key: `${p.key}-${ti}`, label: t.label, color: c, colorFrom: c, colorTo: c, totalMin: t.totalMin, tasks: [t] };
-    }).filter(s => s.tasks[0].count > 0)
-  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
@@ -416,39 +412,53 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
       </div>
 
       {tab === 'tasks' ? (
-        <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
-          {/* Pie: процесс × тип задачи */}
-          <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <PieChart processes={pieSegs} size={152}/>
-          </div>
-          <div style={{ width: 1, background: T.border, alignSelf: 'stretch', flexShrink: 0 }}/>
-          {/* Легенда по процессам + задачам с оттенками */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflowY: 'auto', justifyContent: 'center' }}>
-            {shiftData.processes.map(p => {
-              const pMin   = p.tasks.reduce((s, t) => s + t.totalMin, 0);
-              const pCount = p.tasks.reduce((s, t) => s + t.count,    0);
-              const shades = PROC_SHADES[p.key] ?? ['#888','#666','#444'];
-              if (pCount === 0) return null;
-              return (
-                <div key={p.key}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pCount} шт</span>
-                      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pMin} мин</span>
-                    </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, flex: 1, alignContent: 'start' }}>
+          {shiftData.processes.map(p => {
+            const pMin   = p.tasks.reduce((s, t) => s + t.totalMin, 0);
+            const pCount = p.tasks.reduce((s, t) => s + t.count, 0);
+            if (pCount === 0) return null;
+            const pct    = total > 0 ? Math.round(pMin / total * 100) : 0;
+            const rgb    = hexRgb(p.color);
+            return (
+              <div key={p.key} style={{
+                display: 'flex', flexDirection: 'column', gap: 0,
+                borderRadius: 14,
+                background: dark ? `rgba(${rgb},0.10)` : `rgba(${rgb},0.07)`,
+                border: `1px solid rgba(${rgb},0.22)`,
+                overflow: 'hidden',
+              }}>
+                {/* Шапка */}
+                <div style={{ padding: '10px 10px 8px', borderBottom: `1px solid rgba(${rgb},0.15)` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-inter)', marginBottom: 4 }}>
+                    {p.label}
                   </div>
-                  {p.tasks.filter(t => t.count > 0).map((t, ti) => (
-                    <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, paddingLeft: 2, marginBottom: 2 }}>
-                      <div style={{ width: 7, height: 7, borderRadius: 999, background: shades[ti], flexShrink: 0 }}/>
-                      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)', flex: 1 }}>{t.label}</span>
-                      <span style={{ fontSize: 10, color: T.text, fontWeight: 600, fontFamily: 'var(--font-inter)' }}>{t.count} шт</span>
-                    </div>
-                  ))}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: T.text, fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>{pCount}</span>
+                    <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>шт</span>
+                  </div>
+                  <div style={{ marginTop: 2, display: 'flex', gap: 4 }}>
+                    <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pMin} мин</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: p.color, fontFamily: 'var(--font-inter)' }}>{pct}%</span>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+                {/* Задачи */}
+                <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {p.tasks.filter(t => t.count > 0).map(t => {
+                    const tPct = pMin > 0 ? Math.round(t.totalMin / pMin * 100) : 0;
+                    return (
+                      <div key={t.label}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1 }}>
+                          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
+                          <span style={{ fontSize: 9, fontWeight: 600, color: p.color, fontFamily: 'var(--font-inter)' }}>{tPct}%</span>
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{t.count} шт</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         /* Холды */
