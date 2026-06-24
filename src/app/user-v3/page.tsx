@@ -432,10 +432,12 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
               if (pCount === 0) return null;
               return (
                 <div key={p.key}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 3 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 3 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, fontFamily: 'var(--font-inter)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.label}</span>
-                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pCount} шт</span>
-                    <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pMin} мин</span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pCount} шт</span>
+                      <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pMin} мин</span>
+                    </div>
                   </div>
                   {p.tasks.filter(t => t.count > 0).map((t, ti) => (
                     <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, paddingLeft: 2, marginBottom: 2 }}>
