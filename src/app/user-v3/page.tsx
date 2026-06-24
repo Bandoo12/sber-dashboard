@@ -18,7 +18,7 @@ const DARK_T = {
   greenAct:   '#00B24B',
   yellow:     '#D9A600',
   red:        '#DC3535',
-  track:      'rgba(255,255,255,0.13)',
+  track:      'rgba(255,255,255,0.09)',
   tabBg:      'rgba(255,255,255,0.05)',
   statBg:     'rgba(255,255,255,0.04)',
   statBorder: 'rgba(255,255,255,0.06)',
@@ -40,7 +40,7 @@ const LIGHT_T = {
   red:        '#C42B2B',
   track:      'rgba(0,0,0,0.22)',
   tabBg:      'rgba(0,0,0,0.08)',
-  statBg:     'rgba(0,0,0,0.055)',
+  statBg:     'rgba(0,0,0,0.038)',
   statBorder: 'rgba(0,0,0,0.14)',
   cardBg:     '#FFFFFF',
 };
@@ -527,14 +527,14 @@ function MonthlyBack({ tasks: _, months, qtrPct: __ }: { tasks: TaskData[]; mont
       </div>
 
       {/* Итого за квартал */}
-      <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 14 }}>
+      <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 14, textAlign: 'center' }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'var(--font-inter)', marginBottom: 8 }}>
           Итого за квартал
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 14, justifyContent: 'center' }}>
           {qtrSplit.map(p => (
-            <div key={p.key} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: 10, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
+            <div key={p.key} style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+              <span style={{ fontSize: 16, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{p.label}</span>
               <span style={{ fontSize: 16, fontWeight: 700, color: p.color, fontFamily: 'var(--font-manrope)' }}>
                 {Math.round(p.pct * 100)}%
               </span>
