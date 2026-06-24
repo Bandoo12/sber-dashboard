@@ -414,11 +414,20 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
       {tab === 'tasks' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, flex: 1, alignContent: 'start' }}>
           {shiftData.processes.map(p => {
-            const pMin   = p.tasks.reduce((s, t) => s + t.totalMin, 0);
-            const pCount = p.tasks.reduce((s, t) => s + t.count, 0);
-            if (pCount === 0) return null;
+            const active = p.tasks.filter(t => t.count > 0);
+            if (active.length === 0) return null;
+            const pMin   = active.reduce((s, t) => s + t.totalMin, 0);
+            const pCount = active.reduce((s, t) => s + t.count, 0);
             const pct    = total > 0 ? Math.round(pMin / total * 100) : 0;
             const rgb    = hexRgb(p.color);
+            // распределение процентов с остатком на последний элемент → сумма всегда 100
+            let usedPct  = 0;
+            const tPcts  = active.map((t, i) => {
+              if (i === active.length - 1) return 100 - usedPct;
+              const v = pMin > 0 ? Math.round(t.totalMin / pMin * 100) : 0;
+              usedPct += v;
+              return v;
+            });
             return (
               <div key={p.key} style={{
                 display: 'flex', flexDirection: 'column', gap: 0,
@@ -443,18 +452,15 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
                 </div>
                 {/* Задачи */}
                 <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {p.tasks.filter(t => t.count > 0).map(t => {
-                    const tPct = pMin > 0 ? Math.round(t.totalMin / pMin * 100) : 0;
-                    return (
-                      <div key={t.label}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1 }}>
-                          <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: p.color, fontFamily: 'var(--font-inter)' }}>{tPct}%</span>
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{t.count} шт</span>
+                  {active.map((t, i) => (
+                    <div key={t.label}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1 }}>
+                        <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{t.label}</span>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: p.color, fontFamily: 'var(--font-inter)' }}>{tPcts[i]}%</span>
                       </div>
-                    );
-                  })}
+                      <span style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: 'var(--font-manrope)' }}>{t.count} шт</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
