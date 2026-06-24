@@ -578,7 +578,7 @@ function ProductivityRing({ id, plan, fact, displayPlan, displayFact, title, dat
   const R = 88; const CX = 120; const CY = 120; const SW = 20;
   const cardBg = dark
     ? `linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 42%, rgba(255,255,255,0.02) 100%)`
-    : `linear-gradient(145deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.02) 60%, ${T.surface} 100%)`;
+    : T.surface;
   return (
     <div
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
@@ -665,10 +665,8 @@ function EmployeeCard({ emp, onSelect }: { emp: Employee; onSelect: (e: Employee
       style={{
         borderRadius: 20, padding: '20px 20px 22px',
         border: hov ? `1px solid rgba(${rgb},0.4)` : `1px solid ${T.border}`,
-        background: hov
-          ? (dark
-              ? `linear-gradient(145deg, rgba(${rgb},0.1) 0%, rgba(${rgb},0.04) 60%, rgba(255,255,255,0.02) 100%)`
-              : `linear-gradient(145deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.02) 60%, ${T.surface} 100%)`)
+        background: hov && dark
+          ? `linear-gradient(145deg, rgba(${rgb},0.1) 0%, rgba(${rgb},0.04) 60%, rgba(255,255,255,0.02) 100%)`
           : T.cardBg,
         cursor: 'pointer', transition: 'border-color 150ms, background 150ms',
         display: 'flex', flexDirection: 'column', gap: 16,
@@ -755,7 +753,7 @@ function ProfileView({ emp }: { emp: Employee; isSelf?: boolean }) {
       <div style={{
         background: dark
           ? `linear-gradient(145deg, rgba(${pctRgbVal},0.14) 0%, rgba(128,128,128,0.04) 60%, rgba(128,128,128,0.01) 100%)`
-          : `linear-gradient(145deg, rgba(${pctRgbVal},0.20) 0%, rgba(${pctRgbVal},0.07) 55%, ${T.surface} 100%)`,
+          : T.surface,
         borderRadius: 24, border: `1px solid rgba(${pctRgbVal},0.18)`,
         padding: '18px 22px',
       }}>
