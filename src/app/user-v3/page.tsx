@@ -169,6 +169,8 @@ const EMPLOYEES: Employee[] = [
   { id: 'e4', name: 'Козлов Дмитрий Александрович',  initials: 'КД', avatar: 'https://randomuser.me/api/portraits/men/58.jpg',   gradFrom: '#DC3535', gradTo: '#D9A600', todayFact: 189, todayPlan: 430, qtrFact:  8500, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 8500), shiftData: makeShiftData(189), ...makeTasks( 8500) },
   { id: 'e5', name: 'Новикова Екатерина Дмитриевна', initials: 'НЕ', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', gradFrom: '#D9A600', gradTo: '#1381FF', todayFact: 314, todayPlan: 430, qtrFact: 15800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(15800), shiftData: makeShiftData(314), ...makeTasks(15800) },
   { id: 'e6', name: 'Морозов Алексей Владимирович',  initials: 'МА', avatar: 'https://randomuser.me/api/portraits/men/11.jpg',   gradFrom: '#00D95B', gradTo: '#D9A600', todayFact: 430, todayPlan: 430, qtrFact: 24200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths(24200), shiftData: makeShiftData(430), ...makeTasks(24200) },
+  { id: 'e7', name: 'Лебедева Мария Николаевна',    initials: 'ЛМ', avatar: 'https://randomuser.me/api/portraits/women/22.jpg', gradFrom: '#DC3535', gradTo: '#FF6B6B', todayFact:  48, todayPlan: 430, qtrFact:  5200, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 5200), shiftData: makeShiftData( 48), ...makeTasks( 5200) },
+  { id: 'e8', name: 'Сидоров Павел Григорьевич',    initials: 'СП', avatar: 'https://randomuser.me/api/portraits/men/77.jpg',   gradFrom: '#DC3535', gradTo: '#D9A600', todayFact:  92, todayPlan: 430, qtrFact:  6800, qtrPlan: QTR_PLAN_TO_DATE, months: makeMonths( 6800), shiftData: makeShiftData( 92), ...makeTasks( 6800) },
 ];
 
 /* ── HELPERS ── */
@@ -389,7 +391,8 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
   const [tab, setTab] = useState<ShiftTab>('tasks');
   const { T, dark } = useTheme();
   const holdTotal = shiftData.holds.reduce((s, h) => s + h.durationMin, 0);
-  const total = shiftData.processes.reduce((s, p) => s + p.totalMin, 0);
+  const total = shiftData.processes.reduce((s, p) =>
+    s + p.tasks.filter(t => t.count > 0).reduce((ss, t) => ss + t.totalMin, 0), 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10 }}>
@@ -411,23 +414,47 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
         ))}
       </div>
 
-      {tab === 'tasks' ? (
+      {tab === 'tasks' ? (() => {
+        // Собираем данные по всем процессам
+        const procs = shiftData.processes.map(p => {
+          const active = p.tasks.filter(t => t.count > 0);
+          const pMin   = active.reduce((s, t) => s + t.totalMin, 0);
+          const pCount = active.reduce((s, t) => s + t.count, 0);
+          return { ...p, active, pMin, pCount };
+        }).filter(pd => pd.active.length > 0);
+
+        // Largest-remainder для колонок (pct) → X+Y+Z = 100
+        const rawP = procs.map(pd => total > 0 ? pd.pMin / total * 100 : 0);
+        const floorP = rawP.map(Math.floor);
+        const remP = rawP.map((v, i) => ({ i, r: v - floorP[i] })).sort((a, b) => b.r - a.r);
+        const colPcts = [...floorP];
+        remP.slice(0, 100 - floorP.reduce((s, v) => s + v, 0)).forEach(({ i }) => colPcts[i]++);
+
+        // Largest-remainder для задач (tPcts) по всем задачам вместе → сумма по всем = 100
+        const allTasks = procs.flatMap(pd => pd.active.map(t => ({ t, pKey: pd.key })));
+        const rawT = allTasks.map(({ t }) => total > 0 ? t.totalMin / total * 100 : 0);
+        const floorT = rawT.map(Math.floor);
+        const remT  = rawT.map((v, i) => ({ i, r: v - floorT[i] })).sort((a, b) => b.r - a.r);
+        const allTPcts = [...floorT];
+        remT.slice(0, 100 - floorT.reduce((s, v) => s + v, 0)).forEach(({ i }) => allTPcts[i]++);
+
+        // Разбиваем обратно по процессам
+        let taskIdx = 0;
+        const tPctsMap: Record<string, number[]> = {};
+        for (const pd of procs) {
+          tPctsMap[pd.key] = pd.active.map(() => allTPcts[taskIdx++]);
+        }
+
+        return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, flex: 1, alignContent: 'start' }}>
-          {shiftData.processes.map(p => {
-            const active = p.tasks.filter(t => t.count > 0);
-            if (active.length === 0) return null;
-            const pMin   = active.reduce((s, t) => s + t.totalMin, 0);
-            const pCount = active.reduce((s, t) => s + t.count, 0);
-            const pct    = total > 0 ? Math.round(pMin / total * 100) : 0;
+          {procs.map((pd, pi) => {
+            const p      = pd;
+            const active = pd.active;
+            const pMin   = pd.pMin;
+            const pCount = pd.pCount;
+            const pct    = colPcts[pi];
             const rgb    = hexRgb(p.color);
-            // распределение процентов с остатком на последний элемент → сумма всегда 100
-            let usedPct  = 0;
-            const tPcts  = active.map((t, i) => {
-              if (i === active.length - 1) return 100 - usedPct;
-              const v = pMin > 0 ? Math.round(t.totalMin / pMin * 100) : 0;
-              usedPct += v;
-              return v;
-            });
+            const tPcts  = tPctsMap[p.key];
             return (
               <div key={p.key} style={{
                 display: 'flex', flexDirection: 'column', gap: 0,
@@ -441,13 +468,15 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
                   <div style={{ fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-inter)', marginBottom: 4 }}>
                     {p.label}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: T.text, fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>{pCount}</span>
-                    <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>шт</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: T.text, fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>{pCount}</span>
+                      <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>шт</span>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: p.color, fontFamily: 'var(--font-inter)' }}>{pct}%</span>
                   </div>
-                  <div style={{ marginTop: 2, display: 'flex', gap: 4 }}>
+                  <div style={{ marginTop: 2 }}>
                     <span style={{ fontSize: 9, color: T.textDim, fontFamily: 'var(--font-inter)' }}>{pMin} мин</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: p.color, fontFamily: 'var(--font-inter)' }}>{pct}%</span>
                   </div>
                 </div>
                 {/* Задачи */}
@@ -466,7 +495,8 @@ function ShiftBack({ shiftData }: { shiftData: ShiftData }) {
             );
           })}
         </div>
-      ) : (
+        );
+      })() : (
         /* Холды */
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {shiftData.holds.map((h, i) => (

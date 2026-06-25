@@ -53,8 +53,9 @@ const MODAL_DOCS = [
   {
     name: 'Письменные пояснения',
     files: [
-      { label: 'Договор поставки №12', date: '03.02.2024', status: 'ok' },
-      { label: 'Доп. соглашение №1',   date: '15.03.2024', status: 'ok' },
+      { label: 'Договор поставки',            date: '03.02.2024', status: 'ok' },
+      { label: 'Счет-фактура SF-2024-0089',   date: '15.03.2024', status: 'ok' },
+      { label: 'Акт приема-передачи',          date: '20.03.2024', status: 'ok' },
     ],
   },
   {
@@ -207,14 +208,14 @@ function RequestModal({ onClose }: { onClose: () => void }) {
                 borderRadius: 12, padding: '11px 14px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 17, color: '#555', fontFamily: 'var(--font-inter)' }}>₽</span>
+                  <span style={{ fontSize: 17, color: '#7E8E9E', fontFamily: 'var(--font-inter)' }}>₽</span>
                   <span style={{ fontSize: 15, fontWeight: 500, color: '#08A652', fontFamily: 'var(--font-inter)', letterSpacing: '0.03em' }}>
                     {acc}
                   </span>
                 </div>
                 <button onClick={() => copy(acc)} style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 6,
-                  color: copied === acc ? '#22C55E' : '#666',
+                  color: copied === acc ? '#22C55E' : '#7E8E9E',
                   display: 'flex', alignItems: 'center', transition: 'color 150ms',
                 }}>
                   {copied === acc
