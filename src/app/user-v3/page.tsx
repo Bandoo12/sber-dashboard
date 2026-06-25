@@ -915,7 +915,11 @@ export default function UserV3Page() {
 
             {view === 'team' && !selected && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                {EMPLOYEES.map(emp => (
+                {[...EMPLOYEES].sort((a, b) => {
+                  const redA = a.todayFact / a.todayPlan < 0.33 ? 0 : 1;
+                  const redB = b.todayFact / b.todayPlan < 0.33 ? 0 : 1;
+                  return redA - redB;
+                }).map(emp => (
                   <EmployeeCard key={emp.id} emp={emp} onSelect={handleSelectEmployee}/>
                 ))}
               </div>
