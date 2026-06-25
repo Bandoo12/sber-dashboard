@@ -87,12 +87,6 @@ function RequestModal({ onClose }: { onClose: () => void }) {
     setTimeout(() => setCopied(null), 1500);
   };
 
-  const TABS = [
-    { id: 'accounts' as Tab, label: 'Счета',     count: 3 },
-    { id: 'ops'      as Tab, label: 'Операции',  count: 5 },
-    { id: 'docs'     as Tab, label: 'Документы', count: 4 },
-  ];
-
   return (
     <div
       onClick={onClose}
@@ -170,50 +164,31 @@ function RequestModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {/* Stats */}
-          <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          {/* Stat cards = tabs */}
+          <div style={{ display: 'flex', padding: '12px 14px', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
             {[
-              { label: 'Счетов',    val: 10 },
-              { label: 'Операций',  val: 3  },
-              { label: 'Документов',val: 4  },
-            ].map((s, i) => (
-              <div key={s.label} style={{
-                flex: 1, padding: '16px 0', textAlign: 'center',
-                borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
-              }}>
-                <div style={{ fontSize: 11, color: '#5a5a5a', fontFamily: 'var(--font-inter)', marginBottom: 6 }}>
-                  {s.label}
-                </div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#22C55E', fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>
-                  {s.val}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Tabs */}
-          <div style={{ padding: '12px 22px 0', display: 'flex', gap: 4, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                height: 36, borderRadius: 10, border: 'none', cursor: 'pointer',
-                padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6,
-                background: tab === t.id ? '#2A2C35' : 'transparent',
-                color: tab === t.id ? '#FAFAFA' : '#666',
-                fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
-                fontFamily: 'var(--font-inter)', marginBottom: 12,
-                transition: 'all 150ms',
-              }}>
-                {t.label}
-                <span style={{
-                  minWidth: 20, height: 18, borderRadius: 999,
-                  background: tab === t.id ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
-                  color: tab === t.id ? '#FAFAFA' : '#444',
-                  fontSize: 11, fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '0 5px',
-                }}>{t.count}</span>
-              </button>
-            ))}
+              { id: 'accounts' as Tab, label: 'Счета',     val: 10 },
+              { id: 'ops'      as Tab, label: 'Операции',  val: 3  },
+              { id: 'docs'     as Tab, label: 'Документы', val: 4  },
+            ].map(s => {
+              const active = tab === s.id;
+              return (
+                <button key={s.id} onClick={() => setTab(s.id)} style={{
+                  flex: 1, padding: '12px 0', borderRadius: 14,
+                  background: active ? '#2A2C35' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${active ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
+                  cursor: 'pointer', textAlign: 'center',
+                  transition: 'all 150ms',
+                }}>
+                  <div style={{ fontSize: 11, color: active ? '#888' : '#444', fontFamily: 'var(--font-inter)', marginBottom: 5 }}>
+                    {s.label}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: active ? '#22C55E' : '#333', fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>
+                    {s.val}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Tab content */}
