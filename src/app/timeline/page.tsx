@@ -129,7 +129,7 @@ function RequestModal({ onClose }: { onClose: () => void }) {
           {/* Status */}
           <div style={{
             padding: '14px 22px',
-            background: '#181B1F',
+            background: '#131619',
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
             <IconCheck/>
