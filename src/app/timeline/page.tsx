@@ -154,10 +154,9 @@ function RequestModal({ onClose }: { onClose: () => void }) {
               Комментарий
             </div>
             <div style={{
-              background: 'rgba(255,255,255,0.035)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: '#08A652',
               borderRadius: 12, padding: '12px 14px',
-              fontSize: 13, color: '#C8CACC', lineHeight: 1.6,
+              fontSize: 13, color: '#fff', lineHeight: 1.6,
               fontFamily: 'var(--font-inter)',
             }}>
               Пакет документов получен частично. Отсутствует паспорт сделки по валютной операции от 02.04.2024. Ожидаем до даты отсрочки.
