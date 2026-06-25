@@ -99,7 +99,7 @@ function RequestModal({ onClose }: { onClose: () => void }) {
       <div onClick={e => e.stopPropagation()} style={{
         width: 540, maxHeight: '90vh',
         background: '#181B1F',
-        borderRadius: 20, border: '1px solid rgba(255,255,255,0.09)',
+        borderRadius: 20,
         boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
         display: 'flex', flexDirection: 'column',
         overflow: 'hidden',
