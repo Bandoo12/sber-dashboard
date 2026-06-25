@@ -12,15 +12,15 @@ const IconCopy = () => (
   </svg>
 );
 const IconDoc = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
     <polyline points="14,2 14,8 20,8"/>
   </svg>
 );
 const IconCheck = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(34,197,94,0.15)" stroke="#22C55E" strokeWidth="2.5">
-    <circle cx="12" cy="12" r="10"/>
-    <polyline points="9,12 11,14 15,10"/>
+  <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="10" fill="#22C55E"/>
+    <polyline points="8,12 11,15 16,9" stroke="#0a2e1a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 const IconFilter = () => (
@@ -39,17 +39,30 @@ const IconCalendar = () => (
 /* ── DATA ── */
 const MODAL_ACCOUNTS = ['40702810-0012', '40702810-0087', '42301810-1145'];
 const MODAL_OPS = [
-  { num: '47589324', date: '02.04.2024', type: 'Валютная',  amount: '284 000 ₽' },
-  { num: '47589325', date: '15.03.2024', type: 'Входящий',  amount: '1 420 000 ₽' },
-  { num: '47589326', date: '28.02.2024', type: 'Исходящий', amount: '560 000 ₽' },
-  { num: '47589327', date: '10.01.2024', type: 'Конверсия', amount: '890 000 ₽' },
-  { num: '47589328', date: '05.01.2024', type: 'Входящий',  amount: '340 000 ₽' },
+  {
+    amount: '840 000 ₽', date: '12.03.2024',
+    tags: ['Расчёты с ЮЛ', 'Исходящий'],
+    counterparty: 'Иванов Иван Иванович → Наташина Радость',
+    purpose: 'Оплата по договору №12 от 01.03.2024',
+    product: { тип: 'Переводы', подтип: 'Стандартные расчеты', направление: 'Исходящий' },
+    recipient: { наименование: 'ООО БеТА', инн: '77123456', счет: '567231323445' },
+    fullPurpose: 'Оплата по договору №12 от 01.03.2024 за поставку оборудования. НДС не облагается.',
+  },
 ];
 const MODAL_DOCS = [
-  { name: 'Паспорт сделки 01/2024',       date: '15.01.2024', status: 'missing' },
-  { name: 'Договор поставки №384',          date: '03.02.2024', status: 'ok'      },
-  { name: 'Инвойс INV-2024-00112',          date: '22.02.2024', status: 'ok'      },
-  { name: 'ГТД 10702070/020424/00',         date: '02.04.2024', status: 'pending' },
+  {
+    name: 'Письменные пояснения',
+    files: [
+      { label: 'Договор поставки №12', date: '03.02.2024', status: 'ok' },
+      { label: 'Доп. соглашение №1',   date: '15.03.2024', status: 'ok' },
+    ],
+  },
+  {
+    name: 'Источник образования денежных средств',
+    files: [
+      { label: 'Паспорт сделки 01/2024', date: '15.01.2024', status: 'missing' },
+    ],
+  },
 ];
 const DOC_STATUS: Record<string, { label: string; color: string }> = {
   ok:      { label: 'Получен',     color: '#22C55E' },
@@ -80,6 +93,8 @@ const DOTS: Dot[] = [
 function RequestModal({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('accounts');
   const [copied, setCopied] = useState<string | null>(null);
+  const [expandedOp,  setExpandedOp]  = useState<number | null>(null);
+  const [expandedDoc, setExpandedDoc] = useState<number | null>(null);
 
   const copy = (s: string) => {
     navigator.clipboard.writeText(s).catch(() => {});
@@ -88,15 +103,13 @@ function RequestModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div
-      onClick={onClose}
-      style={{
+    <div style={{
         position: 'fixed', inset: 0, zIndex: 100,
         background: 'rgba(0,0,0,0.60)', backdropFilter: 'blur(5px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      <div onClick={e => e.stopPropagation()} style={{
+      <div style={{
         width: 540, maxHeight: '90vh',
         background: '#181B1F',
         borderRadius: 20,
@@ -109,18 +122,12 @@ function RequestModal({ onClose }: { onClose: () => void }) {
         <div style={{
           padding: '20px 22px 18px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0,
+          flexShrink: 0,
         }}>
           <span style={{ fontSize: 18, fontWeight: 700, color: '#FAFAFA', fontFamily: 'var(--font-manrope)' }}>
             Запрос по ФЛ
           </span>
-          <button onClick={onClose} style={{
-            width: 30, height: 30, borderRadius: 999, border: 'none',
-            background: 'rgba(255,255,255,0.07)', color: '#888',
-            fontSize: 18, cursor: 'pointer', lineHeight: 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'inherit',
-          }}>×</button>
+          <div style={{ color: '#7E8E9E', fontSize: 30, lineHeight: 1 }}>×</div>
         </div>
 
         {/* Scrollable body */}
@@ -133,14 +140,14 @@ function RequestModal({ onClose }: { onClose: () => void }) {
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
             <IconCheck/>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#22C55E', fontFamily: 'var(--font-inter)' }}>
+            <span style={{ fontSize: 14, fontWeight: 400, color: '#22C55E', fontFamily: 'var(--font-inter)' }}>
               Успешно
             </span>
           </div>
 
           {/* Doc deadline */}
           <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-            <div style={{ fontSize: 11, color: '#5a5a5a', fontFamily: 'var(--font-inter)', marginBottom: 5, letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, color: '#5E6E7E', fontFamily: 'var(--font-inter)', marginBottom: 5, letterSpacing: '0.04em' }}>
               Срок документов
             </div>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#FAFAFA', fontFamily: 'var(--font-manrope)' }}>
@@ -150,13 +157,13 @@ function RequestModal({ onClose }: { onClose: () => void }) {
 
           {/* Comment */}
           <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-            <div style={{ fontSize: 11, color: '#5a5a5a', fontFamily: 'var(--font-inter)', marginBottom: 8, letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, color: '#5E6E7E', fontFamily: 'var(--font-inter)', marginBottom: 8, letterSpacing: '0.04em' }}>
               Комментарий
             </div>
             <div style={{
-              background: '#08A652',
+              background: '#21252B',
               borderRadius: 12, padding: '12px 14px',
-              fontSize: 13, color: '#fff', lineHeight: 1.6,
+              fontSize: 13, color: '#7E8E9E', lineHeight: 1.6,
               fontFamily: 'var(--font-inter)',
             }}>
               Пакет документов получен частично. Отсутствует паспорт сделки по валютной операции от 02.04.2024. Ожидаем до даты отсрочки.
@@ -164,25 +171,25 @@ function RequestModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Stat cards = tabs */}
-          <div style={{ display: 'flex', padding: '12px 14px', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ display: 'flex', padding: '12px 22px', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
             {[
-              { id: 'accounts' as Tab, label: 'Счета',     val: 10 },
-              { id: 'ops'      as Tab, label: 'Операции',  val: 3  },
-              { id: 'docs'     as Tab, label: 'Документы', val: 4  },
+              { id: 'accounts' as Tab, label: 'Счета',     val: 3 },
+              { id: 'ops'      as Tab, label: 'Операции',  val: 1 },
+              { id: 'docs'     as Tab, label: 'Документы', val: 2 },
             ].map(s => {
               const active = tab === s.id;
               return (
                 <button key={s.id} onClick={() => setTab(s.id)} style={{
-                  flex: 1, padding: '12px 0', borderRadius: 14,
-                  background: active ? '#08A652' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${active ? '#08A652' : 'rgba(255,255,255,0.07)'}`,
-                  cursor: 'pointer', textAlign: 'center',
+                  flex: 1, padding: '12px 14px', borderRadius: 14,
+                  background: active ? '#08A652' : '#21252B',
+                  border: 'none',
+                  cursor: 'pointer', textAlign: 'left',
                   transition: 'all 150ms',
                 }}>
-                  <div style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.75)' : '#555', fontFamily: 'var(--font-inter)', marginBottom: 5 }}>
+                  <div style={{ fontSize: 15, color: '#fff', fontFamily: 'var(--font-inter)', marginBottom: 5 }}>
                     {s.label}
                   </div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: active ? '#fff' : '#888', fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>
+                  <div style={{ fontSize: 26, fontWeight: 400, color: active ? '#fff' : '#888', fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>
                     {s.val}
                   </div>
                 </button>
@@ -196,73 +203,146 @@ function RequestModal({ onClose }: { onClose: () => void }) {
             {tab === 'accounts' && MODAL_ACCOUNTS.map(acc => (
               <div key={acc} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                background: 'rgba(255,255,255,0.035)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: '#21252B',
                 borderRadius: 12, padding: '11px 14px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13, color: '#555', fontFamily: 'var(--font-inter)' }}>₽</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: '#60A5FA', fontFamily: 'var(--font-inter)', letterSpacing: '0.03em' }}>
+                  <span style={{ fontSize: 17, color: '#555', fontFamily: 'var(--font-inter)' }}>₽</span>
+                  <span style={{ fontSize: 15, fontWeight: 500, color: '#08A652', fontFamily: 'var(--font-inter)', letterSpacing: '0.03em' }}>
                     {acc}
                   </span>
                 </div>
                 <button onClick={() => copy(acc)} style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 6,
-                  color: copied === acc ? '#22C55E' : '#444',
+                  color: copied === acc ? '#22C55E' : '#666',
                   display: 'flex', alignItems: 'center', transition: 'color 150ms',
                 }}>
-                  {copied === acc ? '✓' : <IconCopy/>}
+                  {copied === acc
+                    ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,12 9,17 20,6"/></svg>
+                    : <IconCopy/>}
                 </button>
               </div>
             ))}
 
-            {tab === 'ops' && MODAL_OPS.map(op => (
-              <div key={op.num} style={{
-                background: 'rgba(255,255,255,0.035)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 12, padding: '11px 14px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              }}>
-                <div>
-                  <div style={{ fontSize: 11, color: '#444', fontFamily: 'var(--font-inter)', marginBottom: 3 }}>
-                    {op.date} · {op.type}
+            {tab === 'ops' && MODAL_OPS.map((op, i) => {
+              const expanded = expandedOp === i;
+              return (
+                <div key={i} style={{
+                  background: '#21252B', borderRadius: 14, overflow: 'hidden',
+                  cursor: 'pointer',
+                }} onClick={() => setExpandedOp(expanded ? null : i)}>
+                  {/* Always visible */}
+                  <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {/* Amount + date */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 18, fontWeight: 600, color: '#08A652', fontFamily: 'var(--font-manrope)' }}>
+                        {op.amount}
+                      </span>
+                      <span style={{ fontSize: 12, color: '#7E8E9E', fontFamily: 'var(--font-inter)' }}>
+                        {op.date}
+                      </span>
+                    </div>
+                    {/* Tags */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {op.tags.map(tag => (
+                        <span key={tag} style={{
+                          padding: '4px 10px', borderRadius: 999,
+                          background: '#3E4C5A',
+                          fontSize: 11, color: '#BECAD4', fontFamily: 'var(--font-inter)',
+                        }}>{tag}</span>
+                      ))}
+                    </div>
+                    {/* Divider */}
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '0 -16px' }}/>
+                    {/* Counterparty + purpose */}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#D1D5DB', fontFamily: 'var(--font-inter)', marginBottom: 3 }}>
+                        {op.counterparty}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#7E8E9E', fontFamily: 'var(--font-inter)' }}>
+                        {op.purpose}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 13, color: '#60A5FA', fontFamily: 'var(--font-inter)', fontWeight: 500 }}>
-                    № {op.num}
-                  </div>
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA', fontFamily: 'var(--font-manrope)' }}>
-                  {op.amount}
-                </div>
-              </div>
-            ))}
 
-            {tab === 'docs' && MODAL_DOCS.map(doc => (
-              <div key={doc.name} style={{
-                background: 'rgba(255,255,255,0.035)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 12, padding: '11px 14px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ color: '#444', flexShrink: 0 }}><IconDoc/></div>
-                  <div>
-                    <div style={{ fontSize: 13, color: '#D1D5DB', fontFamily: 'var(--font-inter)', fontWeight: 500, marginBottom: 2 }}>
-                      {doc.name}
+                  {/* Expanded section */}
+                  {expanded && (
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                      {/* Продукт */}
+                      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#FAFAFA', fontFamily: 'var(--font-inter)', marginBottom: 10 }}>
+                          Продукт
+                        </div>
+                        {Object.entries(op.product).map(([k, v]) => (
+                          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, color: '#7E8E9E', fontFamily: 'var(--font-inter)', textTransform: 'capitalize' }}>{k}</span>
+                            <span style={{ fontSize: 12, color: '#D1D5DB', fontFamily: 'var(--font-inter)' }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Получатель */}
+                      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#FAFAFA', fontFamily: 'var(--font-inter)', marginBottom: 10 }}>
+                          Получатель
+                        </div>
+                        {Object.entries(op.recipient).map(([k, v]) => (
+                          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, color: '#7E8E9E', fontFamily: 'var(--font-inter)', textTransform: 'capitalize' }}>{k}</span>
+                            <span style={{ fontSize: 12, color: '#D1D5DB', fontFamily: 'var(--font-inter)' }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Назначение платежа */}
+                      <div style={{ padding: '12px 16px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#FAFAFA', fontFamily: 'var(--font-inter)', marginBottom: 8 }}>
+                          Назначение платежа
+                        </div>
+                        <div style={{ fontSize: 12, color: '#7E8E9E', fontFamily: 'var(--font-inter)', lineHeight: 1.6 }}>
+                          {op.fullPurpose}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#444', fontFamily: 'var(--font-inter)' }}>
-                      {doc.date}
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-                  color: DOC_STATUS[doc.status].color, fontFamily: 'var(--font-inter)',
-                }}>
-                  {DOC_STATUS[doc.status].label}
-                </span>
-              </div>
-            ))}
+              );
+            })}
+
+            {tab === 'docs' && MODAL_DOCS.map((doc, i) => {
+              const open = expandedDoc === i;
+              return (
+                <div key={doc.name} style={{ background: '#21252B', borderRadius: 14, overflow: 'hidden' }}>
+                  {/* Header row */}
+                  <button onClick={() => setExpandedDoc(open ? null : i)} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', gap: 10,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                      <span style={{ color: '#5E6E7E', flexShrink: 0, display: 'flex', marginTop: 1 }}><IconDoc/></span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: '#D1D5DB', fontFamily: 'var(--font-inter)', textAlign: 'left' }}>
+                        {doc.name}
+                      </span>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E6E7E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms' }}>
+                      <polyline points="6,9 12,15 18,9"/>
+                    </svg>
+                  </button>
+                  {/* Expanded files */}
+                  {open && (
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                      {doc.files.map(f => (
+                        <div key={f.label} style={{
+                          padding: '13px 16px 13px 45px',
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        }}>
+                          <div style={{ fontSize: 12, color: '#7E8E9E', fontFamily: 'var(--font-inter)' }}>{f.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -272,7 +352,7 @@ function RequestModal({ onClose }: { onClose: () => void }) {
 
 /* ── PAGE ── */
 export default function TimelinePage() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen] = useState(true);
 
   return (
     <div style={{
@@ -336,7 +416,7 @@ export default function TimelinePage() {
 
       {/* Timeline grid */}
       <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-        <TimelineBg onBadgeClick={() => setModalOpen(true)}/>
+        <TimelineBg onBadgeClick={() => {}}/>
       </div>
 
       {/* Footer */}
@@ -383,7 +463,7 @@ export default function TimelinePage() {
       </div>
 
       {/* Modal */}
-      {modalOpen && <RequestModal onClose={() => setModalOpen(false)}/>}
+      {modalOpen && <RequestModal onClose={() => {}  }/>}
     </div>
   );
 }
