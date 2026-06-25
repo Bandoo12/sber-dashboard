@@ -175,15 +175,15 @@ function RequestModal({ onClose }: { onClose: () => void }) {
               return (
                 <button key={s.id} onClick={() => setTab(s.id)} style={{
                   flex: 1, padding: '12px 0', borderRadius: 14,
-                  background: active ? '#2A2C35' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${active ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
+                  background: active ? '#08A652' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${active ? '#08A652' : 'rgba(255,255,255,0.07)'}`,
                   cursor: 'pointer', textAlign: 'center',
                   transition: 'all 150ms',
                 }}>
-                  <div style={{ fontSize: 11, color: active ? '#888' : '#444', fontFamily: 'var(--font-inter)', marginBottom: 5 }}>
+                  <div style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.75)' : '#555', fontFamily: 'var(--font-inter)', marginBottom: 5 }}>
                     {s.label}
                   </div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: active ? '#22C55E' : '#333', fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: active ? '#fff' : '#888', fontFamily: 'var(--font-manrope)', lineHeight: 1 }}>
                     {s.val}
                   </div>
                 </button>
