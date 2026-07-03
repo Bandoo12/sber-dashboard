@@ -682,48 +682,27 @@ function TopBar({ role, onRoleChange }: { role: ClientRole; onRoleChange: (r: Cl
         </div>
       </div>
 
-      {/* Head container */}
-      <div style={{margin:'8px 24px 0',borderRadius:28,border:'1px solid rgba(255,255,255,0.10)',background:'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(4,38,1,0.50) 100%)',overflow:'hidden'}}>
-
-        {/* Row 2: client info */}
-        <div style={{padding:'24px 24px 0 24px'}}>
-          <div style={{fontSize:36,fontWeight:400,color:T.text,fontFamily:'var(--font-inter)',lineHeight:1.1,letterSpacing:'-0.02em',marginBottom:12}}>ООО &quot;НАТАШИНА РАДОСТЬ&quot;</div>
-          <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-            <InfoChip label="ИНН" value="303202567"/>
-            <InfoChip label="Тип клиента" value="ФЛ"/>
-            <InfoChip label="Запрос документов" value="ДА"/>
-            <InfoChip label="Начало периода" value="09.01.2026"/>
-            <InfoChip label="Конец периода" value="09.10.2026"/>
-          </div>
+      {/* Row 3: Role toggle + Профиль */}
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px 12px',overflowX:'auto'}}>
+        <div style={{display:'flex',alignItems:'center',gap:0,borderRadius:999,border:`1px solid rgba(255,255,255,0.12)`,overflow:'hidden',flexShrink:0}}>
+          {(['payer','counterparty'] as ClientRole[]).map(r=>(
+            <button key={r} onClick={()=>onRoleChange(r)} style={{
+              padding:'0 20px',height:36,border:'none',cursor:'pointer',
+              fontSize:14,fontWeight:role===r?600:400,fontFamily:'var(--font-inter)',
+              background:role===r ? T.greenAct : 'transparent',
+              color:role===r ? '#000' : T.textMuted,
+              transition:'background 150ms, color 150ms',
+              flexShrink:0,
+            }}>
+              {r==='payer' ? 'Клиент' : 'Контрагент'}
+            </button>
+          ))}
         </div>
-
-        {/* Row 3: Role toggle + Профиль */}
-        <div style={{display:'flex',alignItems:'center',gap:6,padding:'20px 24px 24px 24px',overflowX:'auto'}}>
-
-          {/* Role toggle */}
-          <div style={{display:'flex',alignItems:'center',gap:0,borderRadius:999,border:`1px solid rgba(255,255,255,0.12)`,overflow:'hidden',flexShrink:0}}>
-            {(['payer','counterparty'] as ClientRole[]).map(r=>(
-              <button key={r} onClick={()=>onRoleChange(r)} style={{
-                padding:'0 20px',height:36,border:'none',cursor:'pointer',
-                fontSize:14,fontWeight:role===r?600:400,fontFamily:'var(--font-inter)',
-                background:role===r ? T.greenAct : 'transparent',
-                color:role===r ? '#000' : T.textMuted,
-                transition:'background 150ms, color 150ms',
-                flexShrink:0,
-              }}>
-                {r==='payer' ? 'Клиент' : 'Контрагент'}
-              </button>
-            ))}
-          </div>
-
-          <div style={{flex:1}}/>
-
-          <button style={{padding:'0 14px',height:36,borderRadius:999,border:`1px solid ${T.border}`,cursor:'pointer',fontSize:14,fontWeight:500,background:'transparent',color:T.textMuted,fontFamily:'var(--font-inter)',flexShrink:0,whiteSpace:'nowrap',display:'inline-flex',alignItems:'center',gap:8}}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M15.325 12.1333C13.925 11.4167 12.1083 10.8333 9.99998 10.8333C7.89165 10.8333 6.07498 11.4167 4.67498 12.1333C3.84165 12.5583 3.33331 13.4167 3.33331 14.35V16.6667H16.6666V14.35C16.6666 13.4167 16.1583 12.5583 15.325 12.1333ZM15 15H4.99998V14.35C4.99998 14.0333 5.16665 13.75 5.43331 13.6167C6.42498 13.1083 8.02498 12.5 9.99998 12.5C11.975 12.5 13.575 13.1083 14.5666 13.6167C14.8333 13.75 15 14.0333 15 14.35V15ZM8.14998 10H11.85C12.8583 10 13.6333 9.11668 13.5 8.11668L13.2333 6.07501C12.975 4.49168 11.6 3.33334 9.99998 3.33334C8.39998 3.33334 7.02498 4.49168 6.76665 6.07501L6.49998 8.11668C6.36665 9.11668 7.14165 10 8.14998 10ZM8.41665 6.32501C8.54998 5.55834 9.21665 5.00001 9.99998 5.00001C10.7833 5.00001 11.45 5.55834 11.5833 6.32501L11.85 8.33334H8.14998L8.41665 6.32501Z" fill="#F6F6F6"/></svg>
-            Профиль клиента
-          </button>
-        </div>
-
+        <div style={{flex:1}}/>
+        <button style={{padding:'0 14px',height:36,borderRadius:999,border:`1px solid ${T.border}`,cursor:'pointer',fontSize:14,fontWeight:500,background:'transparent',color:T.textMuted,fontFamily:'var(--font-inter)',flexShrink:0,whiteSpace:'nowrap',display:'inline-flex',alignItems:'center',gap:8}}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M15.325 12.1333C13.925 11.4167 12.1083 10.8333 9.99998 10.8333C7.89165 10.8333 6.07498 11.4167 4.67498 12.1333C3.84165 12.5583 3.33331 13.4167 3.33331 14.35V16.6667H16.6666V14.35C16.6666 13.4167 16.1583 12.5583 15.325 12.1333ZM15 15H4.99998V14.35C4.99998 14.0333 5.16665 13.75 5.43331 13.6167C6.42498 13.1083 8.02498 12.5 9.99998 12.5C11.975 12.5 13.575 13.1083 14.5666 13.6167C14.8333 13.75 15 14.0333 15 14.35V15ZM8.14998 10H11.85C12.8583 10 13.6333 9.11668 13.5 8.11668L13.2333 6.07501C12.975 4.49168 11.6 3.33334 9.99998 3.33334C8.39998 3.33334 7.02498 4.49168 6.76665 6.07501L6.49998 8.11668C6.36665 9.11668 7.14165 10 8.14998 10ZM8.41665 6.32501C8.54998 5.55834 9.21665 5.00001 9.99998 5.00001C10.7833 5.00001 11.45 5.55834 11.5833 6.32501L11.85 8.33334H8.14998L8.41665 6.32501Z" fill="#F6F6F6"/></svg>
+          Профиль клиента
+        </button>
       </div>
     </div>
   );
@@ -856,6 +835,7 @@ export default function HistoryV2Page() {
       <Sidebar/>
 
       <div style={{marginLeft:92, minHeight:'100vh', background:T.bg}}>
+        <TopBar role={role} onRoleChange={r=>{ setRole(r); setCat(null); }}/>
         <div style={{padding:'18px 24px 48px', display:'flex', flexDirection:'column', gap:18}}>
 
           {/* All-ops bar */}
