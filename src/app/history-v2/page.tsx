@@ -292,63 +292,97 @@ function StatCard({ cfg, ops, allOps, active, onClick }: {
    ALL-OPS BAR  (6 категорий)
 ══════════════════════════════════════════════════════════════ */
 function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; onSelect: () => void }) {
-  const [animKey, setAnimKey] = useState(0);
+  const [hovered, setHovered] = useState(false);
   const total = ops.length;
 
   return (
     <button
       onClick={onSelect}
-      className="all-ops-bar"
-      onMouseEnter={() => { if (!isActive) setAnimKey(k => k+1); }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         display:'flex', alignItems:'center', gap:24,
         padding:'18px 24px', borderRadius:28, width:'100%', textAlign:'left',
-        border: isActive ? '1px solid rgba(255,255,255,0.22)' : '1px solid rgba(255,255,255,0.10)',
+        border: (isActive || hovered) ? '1px solid rgba(255,255,255,0.22)' : '1px solid rgba(255,255,255,0.10)',
         background: isActive
           ? 'linear-gradient(145deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 42%, rgba(255,255,255,0.02) 100%)'
-          : 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 42%, rgba(255,255,255,0.01) 100%)',
+          : hovered
+            ? 'linear-gradient(145deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)'
+            : 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
         boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.3)' : 'none',
         cursor: isActive ? 'default' : 'pointer', outline:'none',
+        transition:'border 150ms, background 150ms',
       }}
     >
-      <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0,minWidth:120}}>
-        <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)'}}>Все операции</span>
-        <span style={{fontSize:42,fontWeight:300,lineHeight:1,letterSpacing:'-0.03em',color:'#fff',fontFamily:'var(--font-inter)'}}>
+      {/* Left: total count */}
+      <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
+        <span style={{fontSize:12,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'0.02em',textTransform:'uppercase'}}>
+          Все операции
+        </span>
+        <span style={{fontSize:44,fontWeight:300,lineHeight:1,letterSpacing:'-0.03em',color:'#fff',fontFamily:'var(--font-inter)'}}>
           {total}
         </span>
       </div>
 
-      <div key={animKey} style={{flex:1,display:'flex',flexDirection:'column',gap:8,alignSelf:'center'}}>
-        <div style={{height:8,borderRadius:999,overflow:'hidden',display:'flex',gap:2}}>
+      {/* Divider */}
+      <div style={{width:1,alignSelf:'stretch',background:'rgba(255,255,255,0.08)',flexShrink:0,margin:'4px 0'}}/>
+
+      {/* Right: bar + legend */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,alignSelf:'center'}}>
+        {/* Stacked bar */}
+        <div style={{height:6,borderRadius:999,overflow:'hidden',display:'flex',gap:1,background:'rgba(255,255,255,0.06)'}}>
           {CAT_CFG.map((c, i) => {
             const pct = total > 0 ? (ops.filter(o => o.category === c.key).length / total) * 100 : 0;
+            if (pct === 0) return null;
             return (
-              <div key={c.key} style={{width:`${pct}%`,height:'100%',overflow:'hidden',flexShrink:0,borderRadius:999}}>
-                <div style={{
-                  width:'100%',height:'100%',background:c.color,
-                  animation:`seg-grow 600ms cubic-bezier(0.25,1,0.5,1) ${i*100}ms both`,
-                }}/>
-              </div>
+              <div key={c.key} style={{
+                width:`${pct}%`,height:'100%',background:c.color,flexShrink:0,
+                animation:`seg-grow 500ms cubic-bezier(0.25,1,0.5,1) ${i*80}ms both`,
+              }}/>
             );
           })}
         </div>
-        <div style={{display:'flex',gap:0}}>
-          {CAT_CFG.map((c, i) => {
+        {/* Legend */}
+        <div style={{display:'flex',flexWrap:'wrap',gap:'6px 16px'}}>
+          {CAT_CFG.map(c => {
             const cnt = ops.filter(o => o.category === c.key).length;
-            const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
+            if (cnt === 0) return null;
+            const pct = Math.round((cnt / total) * 100);
             return (
-              <div key={c.key} style={{width:`${pct}%`,minWidth:0,overflow:'hidden'}}>
-                <span style={{
-                  fontSize:11,fontWeight:500,color:c.color,
-                  fontFamily:'var(--font-inter)',whiteSpace:'nowrap',
-                  animation:`fade-up 300ms ease ${i*80+200}ms both`,
-                  display:'inline-block',
-                }}>{pct}%</span>
+              <div key={c.key} style={{display:'flex',alignItems:'center',gap:6}}>
+                <span style={{width:7,height:7,borderRadius:'50%',background:c.color,flexShrink:0,display:'inline-block'}}/>
+                <span style={{fontSize:12,fontWeight:400,color:'rgba(255,255,255,0.50)',fontFamily:'var(--font-inter)',whiteSpace:'nowrap'}}>
+                  {c.label}
+                </span>
+                <span style={{fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.80)',fontFamily:'var(--font-inter)'}}>
+                  {cnt}
+                </span>
+                <span style={{fontSize:11,color:'rgba(255,255,255,0.30)',fontFamily:'var(--font-inter)'}}>
+                  {pct}%
+                </span>
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Click affordance */}
+      {!isActive && (
+        <div style={{
+          flexShrink:0, display:'flex', alignItems:'center', gap:6,
+          padding:'6px 12px', borderRadius:999,
+          border:'1px solid rgba(255,255,255,0.12)',
+          color:'rgba(255,255,255,0.40)',
+          fontSize:12, fontFamily:'var(--font-inter)',
+          opacity: hovered ? 1 : 0.6,
+          transition:'opacity 150ms',
+        }}>
+          Сбросить
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.35"/>
+          </svg>
+        </div>
+      )}
     </button>
   );
 }
