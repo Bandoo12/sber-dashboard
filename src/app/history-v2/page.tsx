@@ -812,7 +812,13 @@ export default function HistoryV2Page() {
   const [advDateT,setAdvDateT]  = useState('');
 
   const roleOps = useMemo(()=>OPS.filter(o=>o.clientRole===role), [role]);
-  const caseTypes = useMemo(()=>['all',...Array.from(new Set(roleOps.map(o=>o.caseType)))],[roleOps]);
+  const segBaseOps = useMemo(()=>{
+    const sc: Record<string,string|null> = { post: null, online: 'Онлайн', rehab: 'Реабилитация' };
+    const s = sc[segment];
+    return s ? roleOps.filter(o=>o.caseType===s) : roleOps;
+  },[roleOps, segment]);
+
+  const caseTypes = useMemo(()=>['all',...Array.from(new Set(segBaseOps.map(o=>o.caseType)))],[segBaseOps]);
 
   const SEGMENTS = [
     { key:'post'   as const, label:'Пост'   },
@@ -822,8 +828,12 @@ export default function HistoryV2Page() {
 
   const advActive = [advInn,advCp,advAcc,advAmtF,advAmtT,advDateF,advDateT].some(v=>v!=='');
 
+  const SEG_CASE: Record<string,string|null> = { post: null, online: 'Онлайн', rehab: 'Реабилитация' };
+
   const filteredOps = useMemo(()=>{
     let d = roleOps;
+    const sc = SEG_CASE[segment];
+    if (sc)                 d = d.filter(o=>o.caseType===sc);
     if (catFilter)          d = d.filter(o=>o.category===catFilter);
     if (typeFilter!=='all') d = d.filter(o=>o.caseType===typeFilter);
     if (advInn)             d = d.filter(o=>o.inn.includes(advInn));
@@ -838,7 +848,8 @@ export default function HistoryV2Page() {
       if (!isNaN(n)) d = d.filter(o=>parseInt(o.amount.replace(/[^0-9]/g,''),10)<=n);
     }
     return d;
-  },[roleOps, catFilter, typeFilter, advInn, advCp, advAcc, advAmtF, advAmtT]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[roleOps, segment, catFilter, typeFilter, advInn, advCp, advAcc, advAmtF, advAmtT]);
 
   function resetAll() {
     setCat(null); setType('all');
@@ -889,7 +900,7 @@ export default function HistoryV2Page() {
               {SEGMENTS.map(s=>{
                 const isA = segment===s.key;
                 return (
-                  <button key={s.key} onClick={()=>setSegment(s.key)} style={{
+                  <button key={s.key} onClick={()=>{ setSegment(s.key); setType('all'); setCat(null); }} style={{
                     height:38,padding:'0 20px',borderRadius:999,border:'none',cursor:'pointer',
                     fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',whiteSpace:'nowrap',
                     color:isA?'#000':'#C6CFE2',
