@@ -252,9 +252,9 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
               {label}
             </span>
             {active && (
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{flexShrink:0}}>
-                <circle cx="9" cy="9" r="9" fill={`rgba(${rgb},0.20)`}/>
-                <path d="M5.5 9l2.5 2.5 4.5-4.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="26" height="26" viewBox="0 0 26 26" fill="none" style={{flexShrink:0,marginRight:-4}}>
+                <circle cx="13" cy="13" r="13" fill={`rgba(${rgb},0.22)`}/>
+                <path d="M8 13l3.5 3.5 6.5-6.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
           </div>
