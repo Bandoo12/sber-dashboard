@@ -38,9 +38,9 @@ interface Op {
 }
 
 const OPS: Op[] = [
-  {id:1,  status:'На согласовании',      category:'onApproval',   caseNum:'-114986', caseType:'Онлайн',       date:'—',          pp:'655556776', amount:'600 000,00 ₽',    opType:'Безналичная', purpose:'—',                         cp:'ООО Поставка',       inn:'987654321098', account:'40702810123450000345', sig:'Нет', clientRole:'payer'},
+  {id:1,  status:'На согласовании',      category:'onApproval',   caseNum:'-114986', caseType:'Пост',         date:'—',          pp:'655556776', amount:'600 000,00 ₽',    opType:'Безналичная', purpose:'—',                         cp:'ООО Поставка',       inn:'987654321098', account:'40702810123450000345', sig:'Нет', clientRole:'payer'},
   {id:2,  status:'Согласована',          category:'approved',     caseNum:'-115283', caseType:'Онлайн',       date:'15.03.2026', pp:'554433',    amount:'1 200 000,00 ₽',  opType:'Безналичная', purpose:'Оплата по лизингу',         cp:'ООО Лизинг',         inn:'1122334455',   account:'40702810123450000789', sig:'Да',  clientRole:'payer'},
-  {id:3,  status:'Новая',                category:'onApproval',   caseNum:'-115281', caseType:'Онлайн',       date:'—',          pp:'445566',    amount:'78 000,00 ₽',     opType:'Безналичная', purpose:'Хозяйственные расходы',     cp:'ООО ХозТорг',        inn:'1234567890',   account:'40702810123450000678', sig:'Да',  clientRole:'payer'},
+  {id:3,  status:'Новая',                category:'onApproval',   caseNum:'-115281', caseType:'Пост',         date:'—',          pp:'445566',    amount:'78 000,00 ₽',     opType:'Безналичная', purpose:'Хозяйственные расходы',     cp:'ООО ХозТорг',        inn:'1234567890',   account:'40702810123450000678', sig:'Да',  clientRole:'payer'},
   {id:4,  status:'На реабилитации',      category:'rehabPending', caseNum:'-115282', caseType:'Реабилитация', date:'—',          pp:'778899',    amount:'250 000,00 ₽',    opType:'Безналичная', purpose:'Аванс по договору',         cp:'ООО Поставка',       inn:'9876543210',   account:'40702810123450000345', sig:'Да',  clientRole:'payer'},
   {id:5,  status:'На реабилитации',      category:'rehabPending', caseNum:'-1885',   caseType:'Реабилитация', date:'—',          pp:'776633',    amount:'150 000,00 ₽',    opType:'Безналичная', purpose:'Авансовый платеж',          cp:'ООО ТехноСнаб',      inn:'2233445566',   account:'40702810123450001234', sig:'Да',  clientRole:'payer'},
   {id:6,  status:'Отказ в реабилитации', category:'refused',      caseNum:'-1884',   caseType:'Реабилитация', date:'19.03.2026', pp:'998844',    amount:'670 000,00 ₽',    opType:'Безналичная', purpose:'Поставка ТМЦ',              cp:'ООО ТоргПоставка',  inn:'3344556677',   account:'40702810123450001123', sig:'Да',  clientRole:'payer'},
@@ -48,12 +48,12 @@ const OPS: Op[] = [
   {id:8,  status:'Отказана',             category:'refused',      caseNum:'-115285', caseType:'Онлайн',       date:'17.03.2026', pp:'776655',    amount:'890 000,00 ₽',    opType:'Безналичная', purpose:'Оплата по договору',        cp:'ООО СтройМаркет',   inn:'6677889900',   account:'40702810123450000901', sig:'Да',  clientRole:'payer'},
   {id:9,  status:'Отказ в реабилитации', category:'refused',      caseNum:'-115280', caseType:'Онлайн',       date:'16.03.2026', pp:'112233',    amount:'350 000,00 ₽',    opType:'Безналичная', purpose:'Консультационные услуги',   cp:'ООО КонсалтПлюс',   inn:'9900112233',   account:'40702810123450000567', sig:'Да',  clientRole:'payer'},
   {id:10, status:'Отказ в реабилитации', category:'refused',      caseNum:'-1882',   caseType:'Реабилитация', date:'14.03.2026', pp:'990011',    amount:'450 000,00 ₽',    opType:'ВЭД',         purpose:'Импорт товаров',            cp:'ChinaTrade Ltd',     inn:'—',            account:'—',                   sig:'Нет', clientRole:'payer'},
-  {id:11, status:'Отказана',             category:'refused',      caseNum:'-115279', caseType:'Онлайн',       date:'13.03.2026', pp:'443322',    amount:'300 000,00 ₽',    opType:'Безналичная', purpose:'Аренда оборудования',       cp:'ООО РентАвто',       inn:'5544332211',   account:'40702810123450001300', sig:'Да',  clientRole:'payer'},
+  {id:11, status:'Отказана',             category:'refused',      caseNum:'-115279', caseType:'Пост',         date:'13.03.2026', pp:'443322',    amount:'300 000,00 ₽',    opType:'Безналичная', purpose:'Аренда оборудования',       cp:'ООО РентАвто',       inn:'5544332211',   account:'40702810123450001300', sig:'Да',  clientRole:'payer'},
   {id:12, status:'На расследовании',     category:'onApproval',   caseNum:'-115277', caseType:'Онлайн',       date:'—',          pp:'110099',    amount:'750 000,00 ₽',    opType:'Безналичная', purpose:'Сделки с ц/б',              cp:'ООО Инвест',         inn:'2211009988',   account:'40702810123450001400', sig:'Да',  clientRole:'payer'},
   {id:13, status:'Отказана',             category:'refused',      caseNum:'-1881',   caseType:'Реабилитация', date:'11.03.2026', pp:'221100',    amount:'180 000,00 ₽',    opType:'Безналичная', purpose:'Транспортные расходы',      cp:'ООО Логистик',       inn:'3322110099',   account:'—',                   sig:'Нет', clientRole:'payer'},
-  {id:14, status:'На расследовании',     category:'onApproval',   caseNum:'-115278', caseType:'Онлайн',       date:'—',          pp:'332211',    amount:'500 000,00 ₽',    opType:'Безналичная', purpose:'Оплата работ',              cp:'ООО СтройПро',       inn:'4433221100',   account:'40702810123450001500', sig:'Да',  clientRole:'payer'},
-  {id:15, status:'Отказана',             category:'refused',      caseNum:'-115276', caseType:'Онлайн',       date:'10.03.2026', pp:'998877',    amount:'420 000,00 ₽',    opType:'Безналичная', purpose:'Прочие расходы',            cp:'ООО Прочее',         inn:'1100998877',   account:'40702810123450001600', sig:'Нет', clientRole:'payer'},
-  {id:16, status:'Отозвана',             category:'removed',      caseNum:'-115270', caseType:'Онлайн',       date:'09.03.2026', pp:'332200',    amount:'190 000,00 ₽',    opType:'Безналичная', purpose:'Аренда оборудования',       cp:'ООО РентАвто',       inn:'5544332211',   account:'40702810123450001300', sig:'Нет', clientRole:'payer'},
+  {id:14, status:'На расследовании',     category:'onApproval',   caseNum:'-115278', caseType:'Пост',         date:'—',          pp:'332211',    amount:'500 000,00 ₽',    opType:'Безналичная', purpose:'Оплата работ',              cp:'ООО СтройПро',       inn:'4433221100',   account:'40702810123450001500', sig:'Да',  clientRole:'payer'},
+  {id:15, status:'Отказана',             category:'refused',      caseNum:'-115276', caseType:'Пост',         date:'10.03.2026', pp:'998877',    amount:'420 000,00 ₽',    opType:'Безналичная', purpose:'Прочие расходы',            cp:'ООО Прочее',         inn:'1100998877',   account:'40702810123450001600', sig:'Нет', clientRole:'payer'},
+  {id:16, status:'Отозвана',             category:'removed',      caseNum:'-115270', caseType:'Пост',         date:'09.03.2026', pp:'332200',    amount:'190 000,00 ₽',    opType:'Безналичная', purpose:'Аренда оборудования',       cp:'ООО РентАвто',       inn:'5544332211',   account:'40702810123450001300', sig:'Нет', clientRole:'payer'},
   {id:17, status:'Удалена',              category:'removed',      caseNum:'-115268', caseType:'Онлайн',       date:'08.03.2026', pp:'110077',    amount:'75 000,00 ₽',     opType:'Безналичная', purpose:'Сделки с ц/б',              cp:'ООО Инвест',         inn:'2211009988',   account:'40702810123450001400', sig:'Нет', clientRole:'payer'},
   {id:18, status:'Согласована',          category:'approved',     caseNum:'-115300', caseType:'Онлайн',       date:'20.03.2026', pp:'123456',    amount:'500 000,00 ₽',    opType:'Безналичная', purpose:'Оплата по договору',        cp:'ООО Наташина Радость',inn:'8848116085', account:'40817273453453453543', sig:'Да',  clientRole:'counterparty'},
   {id:19, status:'Отказана',             category:'refused',      caseNum:'-115301', caseType:'Онлайн',       date:'21.03.2026', pp:'234567',    amount:'320 000,00 ₽',    opType:'Безналичная', purpose:'Аванс по контракту',        cp:'ООО Наташина Радость',inn:'8848116085', account:'40817273453453453543', sig:'Да',  clientRole:'counterparty'},
@@ -813,7 +813,7 @@ export default function HistoryV2Page() {
 
   const roleOps = useMemo(()=>OPS.filter(o=>o.clientRole===role), [role]);
   const segBaseOps = useMemo(()=>{
-    const sc: Record<string,string|null> = { post: null, online: 'Онлайн', rehab: 'Реабилитация' };
+    const sc: Record<string,string|null> = { post: 'Пост', online: 'Онлайн', rehab: 'Реабилитация' };
     const s = sc[segment];
     return s ? roleOps.filter(o=>o.caseType===s) : roleOps;
   },[roleOps, segment]);
@@ -828,7 +828,7 @@ export default function HistoryV2Page() {
 
   const advActive = [advInn,advCp,advAcc,advAmtF,advAmtT,advDateF,advDateT].some(v=>v!=='');
 
-  const SEG_CASE: Record<string,string|null> = { post: null, online: 'Онлайн', rehab: 'Реабилитация' };
+  const SEG_CASE: Record<string,string|null> = { post: 'Пост', online: 'Онлайн', rehab: 'Реабилитация' };
 
   const filteredOps = useMemo(()=>{
     let d = roleOps;
