@@ -856,7 +856,6 @@ export default function HistoryV2Page() {
       <Sidebar/>
 
       <div style={{marginLeft:92, minHeight:'100vh', background:T.bg}}>
-        <TopBar role={role} onRoleChange={r=>{ setRole(r); setCat(null); }}/>
         <div style={{padding:'18px 24px 48px', display:'flex', flexDirection:'column', gap:18}}>
 
           {/* All-ops bar */}
