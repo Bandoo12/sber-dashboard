@@ -200,8 +200,8 @@ function playWhoosh() {
 /* ══════════════════════════════════════════════════════════════
    STAT CARD  (flip on hover — AreaChart на обороте)
 ══════════════════════════════════════════════════════════════ */
-function StatCard({ cfg, ops, allOps, active, onClick }: {
-  cfg: typeof CAT_CFG[number]; ops: Op[]; allOps: Op[]; active: boolean; onClick: () => void;
+function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
+  cfg: typeof CAT_CFG[number]; ops: Op[]; allOps: Op[]; active: boolean; dimmed?: boolean; onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const [animKey, setAnimKey] = useState(0);
@@ -230,7 +230,8 @@ function StatCard({ cfg, ops, allOps, active, onClick }: {
         background:`linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.04) 42%, rgba(255,255,255,0.02) 100%)`,
         width:'100%', outline:'none', cursor: active ? 'default' : 'pointer',
         overflow:'hidden', display:'block',
-        transition:'border-color 150ms ease', perspective:900,
+        transition:'border-color 150ms ease, opacity 150ms ease', perspective:900,
+        opacity: dimmed ? 0.38 : 1,
       }}
     >
       <div style={{
@@ -292,97 +293,31 @@ function StatCard({ cfg, ops, allOps, active, onClick }: {
    ALL-OPS BAR  (6 категорий)
 ══════════════════════════════════════════════════════════════ */
 function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; onSelect: () => void }) {
-  const [hovered, setHovered] = useState(false);
   const total = ops.length;
-
   return (
     <button
       onClick={onSelect}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
-        display:'flex', alignItems:'center', gap:24,
-        padding:'18px 24px', borderRadius:28, width:'100%', textAlign:'left',
-        border: (isActive || hovered) ? '1px solid rgba(255,255,255,0.22)' : '1px solid rgba(255,255,255,0.10)',
-        background: isActive
-          ? 'linear-gradient(145deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 42%, rgba(255,255,255,0.02) 100%)'
-          : hovered
-            ? 'linear-gradient(145deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)'
-            : 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-        boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.3)' : 'none',
+        display:'inline-flex', alignItems:'center', gap:10,
+        padding:'0 20px', height:44, borderRadius:999,
+        border: isActive ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(255,255,255,0.10)',
+        background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
         cursor: isActive ? 'default' : 'pointer', outline:'none',
         transition:'border 150ms, background 150ms',
+        flexShrink:0,
       }}
     >
-      {/* Left: total count */}
-      <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
-        <span style={{fontSize:12,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'0.02em',textTransform:'uppercase'}}>
-          Все операции
-        </span>
-        <span style={{fontSize:44,fontWeight:300,lineHeight:1,letterSpacing:'-0.03em',color:'#fff',fontFamily:'var(--font-inter)'}}>
-          {total}
-        </span>
-      </div>
-
-      {/* Divider */}
-      <div style={{width:1,alignSelf:'stretch',background:'rgba(255,255,255,0.08)',flexShrink:0,margin:'4px 0'}}/>
-
-      {/* Right: bar + legend */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,alignSelf:'center'}}>
-        {/* Stacked bar */}
-        <div style={{height:6,borderRadius:999,overflow:'hidden',display:'flex',gap:1,background:'rgba(255,255,255,0.06)'}}>
-          {CAT_CFG.map((c, i) => {
-            const pct = total > 0 ? (ops.filter(o => o.category === c.key).length / total) * 100 : 0;
-            if (pct === 0) return null;
-            return (
-              <div key={c.key} style={{
-                width:`${pct}%`,height:'100%',background:c.color,flexShrink:0,
-                animation:`seg-grow 500ms cubic-bezier(0.25,1,0.5,1) ${i*80}ms both`,
-              }}/>
-            );
-          })}
-        </div>
-        {/* Legend */}
-        <div style={{display:'flex',flexWrap:'wrap',gap:'6px 16px'}}>
-          {CAT_CFG.map(c => {
-            const cnt = ops.filter(o => o.category === c.key).length;
-            if (cnt === 0) return null;
-            const pct = Math.round((cnt / total) * 100);
-            return (
-              <div key={c.key} style={{display:'flex',alignItems:'center',gap:6}}>
-                <span style={{width:7,height:7,borderRadius:'50%',background:c.color,flexShrink:0,display:'inline-block'}}/>
-                <span style={{fontSize:12,fontWeight:400,color:'rgba(255,255,255,0.50)',fontFamily:'var(--font-inter)',whiteSpace:'nowrap'}}>
-                  {c.label}
-                </span>
-                <span style={{fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.80)',fontFamily:'var(--font-inter)'}}>
-                  {cnt}
-                </span>
-                <span style={{fontSize:11,color:'rgba(255,255,255,0.30)',fontFamily:'var(--font-inter)'}}>
-                  {pct}%
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Click affordance */}
-      {!isActive && (
-        <div style={{
-          flexShrink:0, display:'flex', alignItems:'center', gap:6,
-          padding:'6px 12px', borderRadius:999,
-          border:'1px solid rgba(255,255,255,0.12)',
-          color:'rgba(255,255,255,0.40)',
-          fontSize:12, fontFamily:'var(--font-inter)',
-          opacity: hovered ? 1 : 0.6,
-          transition:'opacity 150ms',
-        }}>
-          Сбросить
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.35"/>
-          </svg>
-        </div>
-      )}
+      <span style={{fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',color: isActive ? '#fff' : 'rgba(255,255,255,0.40)'}}>
+        Все операции
+      </span>
+      <span style={{
+        fontSize:13, fontWeight:600, fontFamily:'var(--font-inter)',
+        padding:'2px 8px', borderRadius:999,
+        background: isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+        color: isActive ? '#fff' : 'rgba(255,255,255,0.35)',
+      }}>
+        {total}
+      </span>
     </button>
   );
 }
@@ -921,6 +856,7 @@ export default function HistoryV2Page() {
                 ops={roleOps.filter(o=>o.category===cfg.key)}
                 allOps={roleOps}
                 active={catFilter===cfg.key}
+                dimmed={catFilter!==null && catFilter!==cfg.key}
                 onClick={()=>setCat(p=>p===cfg.key?null:cfg.key)}
               />
             ))}
