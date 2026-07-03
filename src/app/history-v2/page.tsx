@@ -761,7 +761,7 @@ export default function HistoryV2Page() {
   const [role, setRole]         = useState<ClientRole>('payer');
   const [catFilter, setCat]     = useState<Category|null>(null);
   const [typeFilter, setType]   = useState('all');
-  const [segment, setSegment]   = useState<'post'|'online'|'rehab'>('post');
+  const [segment, setSegment]   = useState<'online'|'rehab'>('online');
   const [showAdv, setShowAdv]   = useState(false);
 
   /* Расширенные фильтры */
@@ -783,7 +783,6 @@ export default function HistoryV2Page() {
   const caseTypes = useMemo(()=>['all',...Array.from(new Set(segBaseOps.map(o=>o.caseType)))],[segBaseOps]);
 
   const SEGMENTS = [
-    { key:'post'   as const, label:'Пост'   },
     { key:'online' as const, label:'Онлайн' },
     { key:'rehab'  as const, label:'Реабилитация' },
   ];
