@@ -246,18 +246,18 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
           padding:'20px',
           backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden',
           display:'flex', flexDirection:'column', gap:10, justifyContent:'flex-start',
+          position:'relative',
         }}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
-              {label}
-            </span>
-            {active && (
-              <svg width="26" height="26" viewBox="0 0 26 26" fill="none" style={{flexShrink:0,marginRight:-4}}>
-                <circle cx="13" cy="13" r="13" fill={`rgba(${rgb},0.22)`}/>
-                <path d="M8 13l3.5 3.5 6.5-6.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </div>
+          {active && (
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
+              style={{position:'absolute', top:16, right:16, flexShrink:0}}>
+              <circle cx="13" cy="13" r="13" fill={`rgba(${rgb},0.22)`}/>
+              <path d="M8 13l3.5 3.5 6.5-6.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
+            {label}
+          </span>
           <div style={{fontSize:50,fontWeight:300,lineHeight:1,color,fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
             {count}
           </div>
