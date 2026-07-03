@@ -762,19 +762,25 @@ function FigmaDropdown({ value, onChange, options }: { value:string; onChange:(v
 
   return (
     <div ref={ref} style={{position:'relative',flexShrink:0}}>
-      <div onClick={()=>setOpen(p=>!p)} style={{display:'flex',alignItems:'center',gap:0,height:36,borderRadius:8,overflow:'hidden',cursor:'pointer',background:'#212226',border:'1px solid rgba(255,255,255,0.08)',userSelect:'none'}}>
-        <div style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 7H16V5L14 3H10L8 5V7H4C2.9 7 2 7.9 2 9V14C2 14.75 2.4 15.38 3 15.73V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V15.72C21.59 15.37 22 14.73 22 14V9C22 7.9 21.1 7 20 7ZM10 5H14V7H10V5ZM4 9H20V14H15V11H9V14H4V9ZM13 15H11V13H13V15ZM19 19H5V16H9V17H15V16H19V19Z" fill="rgba(255,255,255,0.4)"/></svg>
-        </div>
-        <span style={{fontSize:14,fontWeight:500,color:'#AAAABB',fontFamily:'var(--font-inter)',paddingRight:4,whiteSpace:'nowrap'}}>{selected?.label ?? 'Выбрать'}</span>
-        <div style={{width:32,height:36,display:'flex',alignItems:'center',justifyContent:'center',background:'#3A3D43',marginLeft:4,flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}}>
-          <svg width="8" height="5" viewBox="0 0 8 5" fill="none"><path d="M7.06 0L4 3.05333L0.94 0L0 0.94L4 4.94L8 0.94L7.06 0Z" fill="white"/></svg>
-        </div>
+      <div onClick={()=>setOpen(p=>!p)} style={{
+        display:'flex', alignItems:'center', gap:6,
+        height:44, borderRadius:999, padding:'0 16px',
+        cursor:'pointer', background:'transparent',
+        border:'1px solid #3A3D43', userSelect:'none',
+      }}>
+        <span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,0.55)',fontFamily:'var(--font-inter)',whiteSpace:'nowrap'}}>
+          {selected?.label ?? 'Выбрать'}
+        </span>
+        <svg width="8" height="5" viewBox="0 0 8 5" fill="none"
+          style={{transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s',flexShrink:0}}>
+          <path d="M7.06 0L4 3.05333L0.94 0L0 0.94L4 4.94L8 0.94L7.06 0Z" fill="rgba(255,255,255,0.55)"/>
+        </svg>
       </div>
       {open && (
-        <div style={{position:'absolute',top:40,right:0,zIndex:999,background:'#212226',border:'1px solid rgba(255,255,255,0.10)',borderRadius:8,overflow:'hidden',minWidth:'100%',boxShadow:'0 8px 24px rgba(0,0,0,0.5)'}}>
+        <div style={{position:'absolute',top:40,left:0,zIndex:999,background:'#1B1B1B',border:'1px solid #2E3035',borderRadius:12,overflow:'hidden',minWidth:'100%',boxShadow:'0 8px 24px rgba(0,0,0,0.5)'}}>
           {options.map(o=>(
-            <div key={o.value} onClick={()=>{onChange(o.value);setOpen(false);}} style={{padding:'8px 14px',fontSize:14,fontWeight:500,color:o.value===value?'#fff':'#AAAABB',background:o.value===value?'rgba(255,255,255,0.06)':'transparent',cursor:'pointer',fontFamily:'var(--font-inter)',whiteSpace:'nowrap'}}
+            <div key={o.value} onClick={()=>{onChange(o.value);setOpen(false);}}
+              style={{padding:'8px 16px',fontSize:14,fontWeight:500,color:o.value===value?'#fff':'rgba(255,255,255,0.55)',background:o.value===value?'rgba(255,255,255,0.06)':'transparent',cursor:'pointer',fontFamily:'var(--font-inter)',whiteSpace:'nowrap'}}
               onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.06)')}
               onMouseLeave={e=>(e.currentTarget.style.background=o.value===value?'rgba(255,255,255,0.06)':'transparent')}>
               {o.label}
