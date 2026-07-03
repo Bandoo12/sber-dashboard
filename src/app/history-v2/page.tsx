@@ -247,9 +247,17 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
           backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden',
           display:'flex', flexDirection:'column', gap:10, justifyContent:'flex-start',
         }}>
-          <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
-            {label}
-          </span>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
+              {label}
+            </span>
+            {active && (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{flexShrink:0}}>
+                <circle cx="9" cy="9" r="9" fill={`rgba(${rgb},0.20)`}/>
+                <path d="M5.5 9l2.5 2.5 4.5-4.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </div>
           <div style={{fontSize:50,fontWeight:300,lineHeight:1,color,fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
             {count}
           </div>
@@ -307,6 +315,12 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
         flexShrink:0,
       }}
     >
+      {isActive && (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0}}>
+          <circle cx="8" cy="8" r="8" fill="rgba(0,178,75,0.25)"/>
+          <path d="M4.5 8l2.5 2.5 4.5-4.5" stroke="#00B24B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
       <span style={{fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',color: isActive ? '#fff' : 'rgba(255,255,255,0.40)'}}>
         Все операции
       </span>
