@@ -306,32 +306,32 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
     <button
       onClick={onSelect}
       style={{
-        display:'inline-flex', alignItems:'center', gap:10,
-        padding:'0 20px', height:44, borderRadius:999,
+        position:'relative', textAlign:'left', borderRadius:28,
         border: isActive ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(255,255,255,0.10)',
-        background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
-        cursor: isActive ? 'default' : 'pointer', outline:'none',
-        transition:'border 150ms, background 150ms',
-        flexShrink:0,
+        background: isActive
+          ? 'linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 42%, rgba(255,255,255,0.02) 100%)'
+          : 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        width:'100%', outline:'none', cursor: isActive ? 'default' : 'pointer',
+        display:'block', transition:'border-color 150ms ease, opacity 150ms ease',
+        opacity: isActive ? 1 : 0.55,
       }}
     >
-      {isActive && (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0}}>
-          <circle cx="8" cy="8" r="8" fill="rgba(0,178,75,0.25)"/>
-          <path d="M4.5 8l2.5 2.5 4.5-4.5" stroke="#00B24B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      )}
-      <span style={{fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',color: isActive ? '#fff' : 'rgba(255,255,255,0.40)'}}>
-        Все операции
-      </span>
-      <span style={{
-        fontSize:13, fontWeight:600, fontFamily:'var(--font-inter)',
-        padding:'2px 8px', borderRadius:999,
-        background: isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
-        color: isActive ? '#fff' : 'rgba(255,255,255,0.35)',
-      }}>
-        {total}
-      </span>
+      <div style={{padding:'20px', display:'flex', flexDirection:'column', gap:10, position:'relative'}}>
+        {isActive && (
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
+            style={{position:'absolute', top:16, right:16}}>
+            <circle cx="13" cy="13" r="13" fill="rgba(255,255,255,0.12)"/>
+            <path d="M8 13l3.5 3.5 6.5-6.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
+          Все операции
+        </span>
+        <div style={{fontSize:50,fontWeight:300,lineHeight:1,color:'#fff',fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
+          {total}
+        </div>
+        <span style={{fontSize:12,color:T.textDim,fontFamily:'var(--font-inter)'}}>100%</span>
+      </div>
     </button>
   );
 }
@@ -768,11 +768,9 @@ export default function HistoryV2Page() {
         <TopBar role={role} onRoleChange={r=>{ setRole(r); setCat(null); }}/>
         <div style={{padding:'18px 24px 48px', display:'flex', flexDirection:'column', gap:18}}>
 
-          {/* All-ops bar */}
-          <AllOpsBar ops={roleOps} isActive={catFilter===null&&!advActive} onSelect={resetAll}/>
-
-          {/* 6 Stat cards — 1 row */}
-          <div style={{display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:14, alignItems:'stretch'}}>
+          {/* 7 cards: Все + 6 категорий */}
+          <div style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:14, alignItems:'stretch'}}>
+            <AllOpsBar ops={roleOps} isActive={catFilter===null&&!advActive} onSelect={resetAll}/>
             {CAT_CFG.map(cfg=>(
               <StatCard
                 key={cfg.key} cfg={cfg}
@@ -787,13 +785,6 @@ export default function HistoryV2Page() {
 
           {/* ── Controls row ── */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-
-            {/* Middle: case type dropdown */}
-            <FigmaDropdown
-              value={typeFilter}
-              onChange={v=>{setType(v);}}
-              options={caseTypes.map(t=>({value:t,label:t==='all'?'Все типы':t}))}
-            />
 
             <div style={{flex:1}}/>
 
