@@ -324,9 +324,6 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
             <path d="M8 13l3.5 3.5 6.5-6.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         )}
-        <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
-          Все операции
-        </span>
         <div style={{fontSize:50,fontWeight:300,lineHeight:1,color:'#fff',fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
           {total}
         </div>
@@ -789,9 +786,7 @@ export default function HistoryV2Page() {
           </div>
 
           {/* ── Controls row ── */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-
-            <div style={{flex:1}}/>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
 
             {/* Расширенные фильтры toggle */}
             <button onClick={()=>setShowAdv(p=>!p)} style={{
@@ -806,6 +801,8 @@ export default function HistoryV2Page() {
               Фильтры
               {advActive && <span style={{fontSize:11,fontWeight:700,color:'#000',background:T.greenAct,borderRadius:999,padding:'0 6px',marginLeft:2}}>{[advInn,advCp,advAcc,advAmtF,advAmtT,advDateF,advDateT].filter(v=>v!=='').length}</span>}
             </button>
+
+            <div style={{flex:1}}/>
 
             {/* Settings */}
             <button style={{width:36,height:36,borderRadius:999,border:'1px solid #2E3035',background:'transparent',cursor:'pointer',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
