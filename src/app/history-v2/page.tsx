@@ -62,12 +62,12 @@ const OPS: Op[] = [
 ];
 
 const CAT_CFG = [
-  { key:'refused'       as Category, label:'Отказанные',       color:'#DC3535', rgb:'220,53,53'   },
-  { key:'removed'       as Category, label:'Отозвано/Удалено', color:'#858585', rgb:'133,133,133' },
+  { key:'refused'       as Category, label:'Отказано',         color:'#DC3535', rgb:'220,53,53'   },
   { key:'approved'      as Category, label:'Согласованные',    color:'#00B24B', rgb:'0,178,75'    },
   { key:'onApproval'    as Category, label:'На согласовании',  color:'#D9A600', rgb:'217,166,0'   },
   { key:'rehabPending'  as Category, label:'На реабилитации',  color:'#F59E0B', rgb:'245,158,11'  },
   { key:'rehabilitated' as Category, label:'Реабилитированные',color:'#1381FF', rgb:'19,129,255'  },
+  { key:'removed'       as Category, label:'Отозвано/Удалено', color:'#858585', rgb:'133,133,133' },
 ] as const;
 
 /* ══════════════════════════════════════════════════════════════
