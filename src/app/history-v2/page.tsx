@@ -464,21 +464,7 @@ function Table({ ops }: { ops: Op[] }) {
                   Нет операций по выбранному фильтру
                 </td></tr>
               : visible.map((o, ri)=>(
-              <tr key={o.id} className="t-row"
-                onMouseEnter={e=>{
-                  const tipW=290,tipH=200;
-                  const x=Math.min(e.clientX+12, window.innerWidth-tipW-8);
-                  const y=e.clientY+tipH>window.innerHeight ? e.clientY-tipH-8 : e.clientY+16;
-                  setTipPos({x,y}); setHovOp(o);
-                }}
-                onMouseMove={e=>{
-                  const tipW=290,tipH=200;
-                  const x=Math.min(e.clientX+12, window.innerWidth-tipW-8);
-                  const y=e.clientY+tipH>window.innerHeight ? e.clientY-tipH-8 : e.clientY+16;
-                  setTipPos({x,y});
-                }}
-                onMouseLeave={()=>setHovOp(null)}
-              >
+              <tr key={o.id} className="t-row">
                 <td style={{...tdS, borderBottomLeftRadius: ri===visible.length-1?12:0}}><Badge status={o.status}/></td>
                 <td style={{...tdS,color:T.text}}>{o.caseNum}</td>
                 <td style={{...tdS,color:T.textMuted}}>{o.caseType}</td>
@@ -499,44 +485,6 @@ function Table({ ops }: { ops: Op[] }) {
         </table>
       </div>
 
-      {/* Row timeline tooltip */}
-      {hovOp && (()=>{
-        const steps = STATUS_FLOW[hovOp.status] ?? [{label:'Создан',color:'#555'},{label:hovOp.status,color:'#888'}];
-        return (
-          <div className="row-timeline visible" style={{
-            position:'fixed', left:tipPos.x, top:tipPos.y, zIndex:9999,
-            background:'#1A1B1E', border:'1px solid rgba(255,255,255,0.10)',
-            borderRadius:12, padding:'14px 16px', minWidth:280,
-            boxShadow:'0 8px 32px rgba(0,0,0,0.6)',
-          }}>
-            <div style={{fontSize:11,fontWeight:500,color:'rgba(255,255,255,0.4)',fontFamily:'var(--font-inter)',marginBottom:12,letterSpacing:'0.05em',textTransform:'uppercase'}}>
-              История кейса {hovOp.caseNum}
-            </div>
-            {steps.map((s,i)=>(
-              <div key={i} style={{display:'flex',alignItems:'flex-start',gap:10}}>
-                <div style={{display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0}}>
-                  <div style={{
-                    width:10,height:10,borderRadius:'50%',
-                    background: i===steps.length-1 ? s.color : 'rgba(255,255,255,0.2)',
-                    border: i===steps.length-1 ? `2px solid ${s.color}` : '2px solid rgba(255,255,255,0.15)',
-                    boxShadow: i===steps.length-1 ? `0 0 6px ${s.color}` : 'none',
-                    marginTop:2, flexShrink:0,
-                  }}/>
-                  {i<steps.length-1 && <div style={{width:1,height:24,background:'rgba(255,255,255,0.08)',margin:'3px 0'}}/>}
-                </div>
-                <div>
-                  <div style={{fontSize:13,fontWeight:i===steps.length-1?600:400,color:i===steps.length-1?'#fff':'rgba(255,255,255,0.45)',fontFamily:'var(--font-inter)'}}>
-                    {s.label}
-                  </div>
-                  <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontFamily:'var(--font-inter)'}}>
-                    {i===steps.length-1&&hovOp.date!=='—' ? hovOp.date : '—'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
 
       {/* Pagination */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:16,padding:'16px 0'}}>
@@ -761,7 +709,6 @@ export default function HistoryV2Page() {
   const [role, setRole]         = useState<ClientRole>('payer');
   const [catFilter, setCat]     = useState<Category|null>(null);
   const [typeFilter, setType]   = useState('all');
-  const [segment, setSegment]   = useState<'online'|'rehab'>('online');
   const [showAdv, setShowAdv]   = useState(false);
 
   /* Расширенные фильтры */
@@ -774,27 +721,12 @@ export default function HistoryV2Page() {
   const [advDateT,setAdvDateT]  = useState('');
 
   const roleOps = useMemo(()=>OPS.filter(o=>o.clientRole===role), [role]);
-  const segBaseOps = useMemo(()=>{
-    const sc: Record<string,string|null> = { post: 'Пост', online: 'Онлайн', rehab: 'Реабилитация' };
-    const s = sc[segment];
-    return s ? roleOps.filter(o=>o.caseType===s) : roleOps;
-  },[roleOps, segment]);
-
-  const caseTypes = useMemo(()=>['all',...Array.from(new Set(segBaseOps.map(o=>o.caseType)))],[segBaseOps]);
-
-  const SEGMENTS = [
-    { key:'online' as const, label:'Онлайн' },
-    { key:'rehab'  as const, label:'Реабилитация' },
-  ];
+  const caseTypes = useMemo(()=>['all',...Array.from(new Set(roleOps.map(o=>o.caseType)))],[roleOps]);
 
   const advActive = [advInn,advCp,advAcc,advAmtF,advAmtT,advDateF,advDateT].some(v=>v!=='');
 
-  const SEG_CASE: Record<string,string|null> = { post: 'Пост', online: 'Онлайн', rehab: 'Реабилитация' };
-
   const filteredOps = useMemo(()=>{
     let d = roleOps;
-    const sc = SEG_CASE[segment];
-    if (sc)                 d = d.filter(o=>o.caseType===sc);
     if (catFilter)          d = d.filter(o=>o.category===catFilter);
     if (typeFilter!=='all') d = d.filter(o=>o.caseType===typeFilter);
     if (advInn)             d = d.filter(o=>o.inn.includes(advInn));
@@ -809,8 +741,7 @@ export default function HistoryV2Page() {
       if (!isNaN(n)) d = d.filter(o=>parseInt(o.amount.replace(/[^0-9]/g,''),10)<=n);
     }
     return d;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[roleOps, segment, catFilter, typeFilter, advInn, advCp, advAcc, advAmtF, advAmtT]);
+  },[roleOps, catFilter, typeFilter, advInn, advCp, advAcc, advAmtF, advAmtT]);
 
   function resetAll() {
     setCat(null); setType('all');
@@ -856,22 +787,6 @@ export default function HistoryV2Page() {
 
           {/* ── Controls row ── */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-
-            {/* Left: Segment control */}
-            <div style={{display:'flex',alignItems:'center',background:'transparent',border:'1px solid #3A3D43',borderRadius:999,padding:3,gap:2}}>
-              {SEGMENTS.map(s=>{
-                const isA = segment===s.key;
-                return (
-                  <button key={s.key} onClick={()=>{ setSegment(s.key); setType('all'); setCat(null); }} style={{
-                    height:38,padding:'0 20px',borderRadius:999,border:'none',cursor:'pointer',
-                    fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',whiteSpace:'nowrap',
-                    color:isA?'#000':'#C6CFE2',
-                    background:isA?'#00B24B':'transparent',
-                    transition:'background 0.15s, color 0.15s',
-                  }}>{s.label}</button>
-                );
-              })}
-            </div>
 
             {/* Middle: case type dropdown */}
             <FigmaDropdown
