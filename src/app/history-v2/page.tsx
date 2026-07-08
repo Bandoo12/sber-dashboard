@@ -316,7 +316,7 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
         opacity: isActive ? 1 : 0.55,
       }}
     >
-      <div style={{padding:'20px', display:'flex', flexDirection:'column', gap:10, position:'relative'}}>
+      <div style={{padding:'20px', display:'flex', flexDirection:'column', gap:10, position:'relative', justifyContent:'flex-start', height:'100%', boxSizing:'border-box'}}>
         {isActive && (
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
             style={{position:'absolute', top:16, right:16}}>
@@ -330,7 +330,12 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
         <div style={{fontSize:50,fontWeight:300,lineHeight:1,color:'#fff',fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
           {total}
         </div>
-        <span style={{fontSize:12,color:T.textDim,fontFamily:'var(--font-inter)'}}>100%</span>
+        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+            <span style={{fontSize:14,fontWeight:600,color:'#fff',fontFamily:'var(--font-inter)'}}>100%</span>
+            <span style={{fontSize:12,color:T.textDim,fontFamily:'var(--font-inter)'}}>от всех операций</span>
+          </div>
+        </div>
       </div>
     </button>
   );
