@@ -264,7 +264,6 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
           <div style={{display:'flex',flexDirection:'column',gap:4}}>
             <div style={{display:'flex',alignItems:'baseline',gap:6}}>
               <span style={{fontSize:14,fontWeight:600,color,fontFamily:'var(--font-inter)'}}>{pct}%</span>
-              <span style={{fontSize:12,color:T.textDim,fontFamily:'var(--font-inter)'}}>от всех операций</span>
             </div>
             {lastDate && (
               <span style={{fontSize:11,color:T.textDim,fontFamily:'var(--font-inter)'}}>Последняя: {lastDate}</span>
@@ -285,7 +284,7 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
             padding:'14px 16px 6px',
           }}>
             <span style={{fontSize:12,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)'}}>{label}</span>
-            <span className="anim-num" style={{fontSize:13,fontWeight:700,color,fontFamily:'var(--font-inter)'}}>{count} · {pct}%</span>
+            <span className="anim-num" style={{fontSize:13,fontWeight:700,color,fontFamily:'var(--font-inter)'}}>{count}</span>
           </div>
           <div key={animKey} style={{flex:1,minHeight:0}}>
             <AreaChart ops={ops} color={color}/>
@@ -330,7 +329,6 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
         <div style={{display:'flex',flexDirection:'column',gap:4}}>
           <div style={{display:'flex',alignItems:'baseline',gap:6}}>
             <span style={{fontSize:14,fontWeight:600,color:'#fff',fontFamily:'var(--font-inter)'}}>100%</span>
-            <span style={{fontSize:12,color:T.textDim,fontFamily:'var(--font-inter)'}}>от всех операций</span>
           </div>
         </div>
       </div>
