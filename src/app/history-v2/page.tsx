@@ -323,10 +323,10 @@ function AllOpsBar({ ops, isActive, onSelect }: { ops: Op[]; isActive: boolean; 
             <path d="M8 13l3.5 3.5 6.5-6.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         )}
-        <span style={{fontSize:13,fontWeight:500,fontFamily:'var(--font-inter)',visibility:'hidden'}}>·</span>
         <div style={{fontSize:50,fontWeight:300,lineHeight:1,color:'#fff',fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
           {total}
         </div>
+        <span style={{fontSize:13,fontWeight:500,fontFamily:'var(--font-inter)',visibility:'hidden'}}>·</span>
         <div style={{display:'flex',flexDirection:'column',gap:4}}>
           <div style={{display:'flex',alignItems:'baseline',gap:6}}>
             <span style={{fontSize:14,fontWeight:600,color:'#fff',fontFamily:'var(--font-inter)'}}>100%</span>
