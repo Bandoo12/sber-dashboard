@@ -585,53 +585,10 @@ const STATUS_CHIPS = [
 ];
 
 function TopBar({ role, onRoleChange }: { role: ClientRole; onRoleChange: (r: ClientRole) => void }) {
-  const CLI_TABS = ['КП','Список','Инфо','Числовая фактура','Операции','Выписка','КА','Заключение'];
-
   return (
     <div style={{background:T.bg}}>
 
-      {/* Row 0 */}
-      <div style={{display:'flex',alignItems:'center',height:40,padding:'0 0 0 14px'}}>
-        <span style={{fontSize:12,fontWeight:400,color:'rgba(255,255,255,0.9)',fontFamily:'var(--font-inter)',whiteSpace:'nowrap'}}>
-          Case Management Online
-        </span>
-        <div style={{flex:1}}/>
-        <div style={{height:40,padding:'0 16px',display:'flex',alignItems:'center',fontSize:12,fontWeight:600,fontFamily:'var(--font-manrope)',color:'rgba(255,255,255,0.45)',borderLeft:`1px solid ${T.border}`,flexShrink:0}}>
-          ID: 303202567
-        </div>
-      </div>
-
-      {/* Row 1: tabs + controls */}
-      <div style={{display:'flex',alignItems:'center',height:44,padding:'0 14px'}}>
-        <div style={{display:'flex',flex:1,overflowX:'auto',gap:6}}>
-          {CLI_TABS.map(t=>{
-            const isActive = t==='Операции';
-            return (
-              <button key={t} style={{height:36,padding:'0 12px',cursor:'pointer',whiteSpace:'nowrap',fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',color:isActive?'#000':'rgba(255,255,255,0.55)',background:isActive?T.green:'transparent',border:isActive?'none':'1px solid #2E3035',borderRadius:999,flexShrink:0}}>{t}</button>
-            );
-          })}
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0,marginLeft:12}}>
-          <div style={{display:'flex',alignItems:'center',gap:6,padding:'4px 12px 4px 4px',height:36,borderRadius:999,background:'rgba(25,40,17,1)'}}>
-            <div style={{width:28,height:28,borderRadius:999,background:T.greenBadge,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <span className="flame-icon" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg viewBox="0 0 24 24" fill="white" width="20" height="20"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>
-              </span>
-            </div>
-            <span style={{fontSize:11,color:'rgba(154,161,177,1)',fontFamily:'var(--font-inter)'}}>:</span>
-            <span style={{fontSize:14,fontWeight:500,color:'#fff',fontFamily:'var(--font-inter)',letterSpacing:'0.02em'}}>23:59:59</span>
-          </div>
-          <button style={{padding:'0 14px',height:40,borderRadius:999,border:'none',cursor:'pointer',fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',background:T.btn,color:T.text,display:'flex',alignItems:'center',gap:8}}>
-            <svg viewBox="0 0 20 20" fill="none" width="24" height="24"><path d="M7 14H9V6H7V14ZM10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM10 18C5.59 18 2 14.41 2 10C2 5.59 5.59 2 10 2C14.41 2 18 5.59 18 10C18 14.41 14.41 18 10 18ZM11 14H13V6H11V14Z" fill="#E3E3E3"/></svg>
-            Отложить задачу
-          </button>
-          <button style={{width:40,height:40,borderRadius:999,border:'none',cursor:'pointer',background:T.greenAct,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Row 3: Role toggle + Профиль */}
+      {/* Role toggle + Профиль */}
       <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px 12px',overflowX:'auto'}}>
         <div style={{display:'flex',alignItems:'center',gap:0,borderRadius:999,border:`1px solid rgba(255,255,255,0.12)`,overflow:'hidden',flexShrink:0}}>
           {(['payer','counterparty'] as ClientRole[]).map(r=>(
