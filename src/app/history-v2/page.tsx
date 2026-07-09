@@ -245,17 +245,15 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
         <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
           {label}
         </span>
-        <div style={{fontSize:50,fontWeight:300,lineHeight:1,color,fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
-          {count}
-        </div>
-        <div style={{display:'flex',flexDirection:'column',gap:4}}>
-          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
-            <span style={{fontSize:14,fontWeight:600,color,fontFamily:'var(--font-inter)'}}>{pct}%</span>
+        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between'}}>
+          <div style={{fontSize:50,fontWeight:300,lineHeight:1,color,fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
+            {count}
           </div>
-          {lastDate && (
-            <span style={{fontSize:11,color:T.textDim,fontFamily:'var(--font-inter)'}}>Последняя: {lastDate}</span>
-          )}
+          <span style={{fontSize:14,fontWeight:600,color,fontFamily:'var(--font-inter)'}}>{pct}%</span>
         </div>
+        {lastDate && (
+          <span style={{fontSize:11,color:T.textDim,fontFamily:'var(--font-inter)'}}>Последняя: {lastDate}</span>
+        )}
       </div>
     </button>
   );
