@@ -694,7 +694,20 @@ export default function HistoryV2Page() {
         <TopBar role={role} onRoleChange={r=>{ setRole(r); setCat(null); }}/>
         <div style={{padding:'18px 24px 48px', display:'flex', flexDirection:'column', gap:18}}>
 
-          {/* 7 cards: Все + 6 категорий */}
+          {/* Показать все */}
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <button onClick={resetAll} style={{
+              padding:'0 16px',height:32,borderRadius:999,
+              border:`1px solid ${catFilter===null&&!advActive ? 'rgba(255,255,255,0.25)' : T.border}`,
+              cursor: catFilter===null&&!advActive ? 'default' : 'pointer',
+              fontSize:13,fontWeight:500,fontFamily:'var(--font-inter)',
+              background: catFilter===null&&!advActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+              color: catFilter===null&&!advActive ? '#fff' : T.textMuted,
+              transition:'all 150ms',
+            }}>Показать все</button>
+          </div>
+
+          {/* 6 категорий */}
           <div style={{display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:14, alignItems:'stretch'}}>
             {CAT_CFG.map(cfg=>(
               <StatCard
@@ -725,20 +738,6 @@ export default function HistoryV2Page() {
               {advActive && <span style={{fontSize:11,fontWeight:700,color:'#000',background:T.greenAct,borderRadius:999,padding:'0 6px',marginLeft:2}}>{[advInn,advCp,advAcc,advAmtF,advAmtT,advDateF,advDateT].filter(v=>v!=='').length}</span>}
             </button>
 
-            {/* Сброс фильтра — только когда активен */}
-            {(catFilter!==null || advActive) && (
-              <button onClick={resetAll} style={{
-                display:'flex',alignItems:'center',gap:6,
-                padding:'0 14px',height:36,borderRadius:999,
-                border:`1px solid ${T.border}`,
-                cursor:'pointer',fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',
-                background:'transparent', color:T.textMuted,
-                transition:'all 150ms', flexShrink:0,
-              }}>
-                Показать все
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            )}
 
             <div style={{flex:1}}/>
 
