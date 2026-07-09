@@ -233,7 +233,7 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
       <div style={{
         padding:'20px',
         display:'flex', flexDirection:'column', gap:10, justifyContent:'flex-start',
-        position:'relative',
+        position:'relative', height:'100%', boxSizing:'border-box',
       }}>
         {active && (
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
