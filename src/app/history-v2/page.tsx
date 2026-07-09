@@ -725,6 +725,24 @@ export default function HistoryV2Page() {
               {advActive && <span style={{fontSize:11,fontWeight:700,color:'#000',background:T.greenAct,borderRadius:999,padding:'0 6px',marginLeft:2}}>{[advInn,advCp,advAcc,advAmtF,advAmtT,advDateF,advDateT].filter(v=>v!=='').length}</span>}
             </button>
 
+            {/* Все операции */}
+            <button onClick={resetAll} style={{
+              display:'flex',alignItems:'center',gap:6,
+              padding:'0 14px',height:36,borderRadius:999,
+              border: catFilter===null&&!advActive ? '1px solid rgba(255,255,255,0.35)' : `1px solid ${T.border}`,
+              cursor:'pointer',fontSize:14,fontWeight:500,fontFamily:'var(--font-inter)',
+              background: catFilter===null&&!advActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+              color: catFilter===null&&!advActive ? '#fff' : T.textMuted,
+              transition:'all 150ms', flexShrink:0,
+            }}>
+              Все
+              <span style={{
+                fontSize:12,fontWeight:700,
+                color: catFilter===null&&!advActive ? '#fff' : T.textDim,
+                fontFamily:'var(--font-inter)',
+              }}>{roleOps.length}</span>
+            </button>
+
             <div style={{flex:1}}/>
 
             {/* Settings */}
