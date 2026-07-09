@@ -203,6 +203,7 @@ function playWhoosh() {
 function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
   cfg: typeof CAT_CFG[number]; ops: Op[]; allOps: Op[]; active: boolean; dimmed?: boolean; onClick: () => void;
 }) {
+  const [hovered, setHovered] = useState(false);
   const { label, color, rgb } = cfg;
   const count = ops.length;
   const total = allOps.length || 1;
@@ -216,11 +217,15 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
 
   const border = active
     ? `1px solid rgba(${rgb},0.45)`
-    : `1px solid rgba(255,255,255,0.10)`;
+    : hovered
+      ? `1px solid rgba(${rgb},0.35)`
+      : `1px solid rgba(255,255,255,0.10)`;
 
   return (
     <button
       onClick={() => { playWhoosh(); onClick(); }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         position:'relative', textAlign:'left', border, borderRadius:28,
         background:`linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.04) 42%, rgba(255,255,255,0.02) 100%)`,
