@@ -554,7 +554,7 @@ function TopBar({ role, onRoleChange }: { role: ClientRole; onRoleChange: (r: Cl
     <div style={{background:T.bg}}>
 
       {/* Role toggle + Профиль */}
-      <div style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px 12px',overflowX:'auto'}}>
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'20px 14px 12px',overflowX:'auto'}}>
         <div style={{display:'flex',alignItems:'center',gap:0,borderRadius:999,border:`1px solid rgba(255,255,255,0.12)`,overflow:'hidden',flexShrink:0}}>
           {(['payer','counterparty'] as ClientRole[]).map(r=>(
             <button key={r} onClick={()=>onRoleChange(r)} style={{
@@ -692,8 +692,7 @@ export default function HistoryV2Page() {
         <div style={{padding:'18px 24px 48px', display:'flex', flexDirection:'column', gap:18}}>
 
           {/* 7 cards: Все + 6 категорий */}
-          <div style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:14, alignItems:'stretch'}}>
-            <AllOpsBar ops={roleOps} isActive={catFilter===null&&!advActive} onSelect={resetAll}/>
+          <div style={{display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:14, alignItems:'stretch'}}>
             {CAT_CFG.map(cfg=>(
               <StatCard
                 key={cfg.key} cfg={cfg}
