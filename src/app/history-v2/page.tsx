@@ -203,8 +203,6 @@ function playWhoosh() {
 function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
   cfg: typeof CAT_CFG[number]; ops: Op[]; allOps: Op[]; active: boolean; dimmed?: boolean; onClick: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
-  const [animKey, setAnimKey] = useState(0);
   const { label, color, rgb } = cfg;
   const count = ops.length;
   const total = allOps.length || 1;
@@ -223,74 +221,41 @@ function StatCard({ cfg, ops, allOps, active, dimmed, onClick }: {
   return (
     <button
       onClick={() => { playWhoosh(); onClick(); }}
-      onMouseEnter={() => { setHovered(true); setAnimKey(k => k+1); }}
-      onMouseLeave={() => setHovered(false)}
       style={{
         position:'relative', textAlign:'left', border, borderRadius:28,
         background:`linear-gradient(145deg, rgba(${rgb},0.14) 0%, rgba(${rgb},0.04) 42%, rgba(255,255,255,0.02) 100%)`,
         width:'100%', outline:'none', cursor: active ? 'default' : 'pointer',
         overflow:'hidden', display:'block',
-        transition:'border-color 150ms ease, opacity 150ms ease', perspective:900,
+        transition:'border-color 150ms ease, opacity 150ms ease',
         opacity: dimmed ? 0.38 : 1,
       }}
     >
       <div style={{
-        position:'relative', width:'100%', height:'100%',
-        transformStyle:'preserve-3d',
-        transform: hovered ? 'rotateY(180deg)' : 'rotateY(0deg)',
-        transition:'transform 650ms cubic-bezier(0.45,0,0.15,1)',
+        padding:'20px',
+        display:'flex', flexDirection:'column', gap:10, justifyContent:'flex-start',
+        position:'relative',
       }}>
-
-        {/* ── FRONT ── */}
-        <div style={{
-          padding:'20px',
-          backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden',
-          display:'flex', flexDirection:'column', gap:10, justifyContent:'flex-start',
-          position:'relative',
-        }}>
-          {active && (
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
-              style={{position:'absolute', top:16, right:16, flexShrink:0}}>
-              <circle cx="13" cy="13" r="13" fill={`rgba(${rgb},0.22)`}/>
-              <path d="M8 13l3.5 3.5 6.5-6.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+        {active && (
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
+            style={{position:'absolute', top:16, right:16, flexShrink:0}}>
+            <circle cx="13" cy="13" r="13" fill={`rgba(${rgb},0.22)`}/>
+            <path d="M8 13l3.5 3.5 6.5-6.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
+          {label}
+        </span>
+        <div style={{fontSize:50,fontWeight:300,lineHeight:1,color,fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
+          {count}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+            <span style={{fontSize:14,fontWeight:600,color,fontFamily:'var(--font-inter)'}}>{pct}%</span>
+          </div>
+          {lastDate && (
+            <span style={{fontSize:11,color:T.textDim,fontFamily:'var(--font-inter)'}}>Последняя: {lastDate}</span>
           )}
-          <span style={{fontSize:13,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)',letterSpacing:'-0.01em'}}>
-            {label}
-          </span>
-          <div style={{fontSize:50,fontWeight:300,lineHeight:1,color,fontFamily:'var(--font-inter)',letterSpacing:'-0.03em'}}>
-            {count}
-          </div>
-          <div style={{display:'flex',flexDirection:'column',gap:4}}>
-            <div style={{display:'flex',alignItems:'baseline',gap:6}}>
-              <span style={{fontSize:14,fontWeight:600,color,fontFamily:'var(--font-inter)'}}>{pct}%</span>
-            </div>
-            {lastDate && (
-              <span style={{fontSize:11,color:T.textDim,fontFamily:'var(--font-inter)'}}>Последняя: {lastDate}</span>
-            )}
-          </div>
         </div>
-
-        {/* ── BACK ── */}
-        <div style={{
-          position:'absolute', inset:0,
-          backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden',
-          transform:'rotateY(180deg)', padding:0,
-          display:'flex', flexDirection:'column',
-          pointerEvents: hovered ? 'auto' : 'none',
-        }}>
-          <div style={{
-            display:'flex', justifyContent:'space-between', alignItems:'center',
-            padding:'14px 16px 6px',
-          }}>
-            <span style={{fontSize:12,fontWeight:500,color:T.textMuted,fontFamily:'var(--font-inter)'}}>{label}</span>
-            <span className="anim-num" style={{fontSize:13,fontWeight:700,color,fontFamily:'var(--font-inter)'}}>{count}</span>
-          </div>
-          <div key={animKey} style={{flex:1,minHeight:0}}>
-            <AreaChart ops={ops} color={color}/>
-          </div>
-        </div>
-
       </div>
     </button>
   );
