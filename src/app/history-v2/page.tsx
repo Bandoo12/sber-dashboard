@@ -695,7 +695,6 @@ export default function HistoryV2Page() {
         <div style={{padding:'18px 24px 48px', display:'flex', flexDirection:'column', gap:18}}>
 
           {/* 6 категорий */}
-          <div style={{display:'flex', flexDirection:'column', gap:10}}>
           <div style={{display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:14, alignItems:'stretch'}}>
             {CAT_CFG.map(cfg=>(
               <StatCard
@@ -709,18 +708,6 @@ export default function HistoryV2Page() {
             ))}
           </div>
 
-            {/* Показать все */}
-            <div style={{display:'flex',justifyContent:'center'}}>
-              <button onClick={resetAll} style={{
-                padding:'0 20px',height:32,borderRadius:999,
-                border:`1px solid ${catFilter===null&&!advActive ? 'rgba(255,255,255,0.25)' : T.border}`,
-                cursor: catFilter===null&&!advActive ? 'default' : 'pointer',
-                fontSize:13,fontWeight:500,fontFamily:'var(--font-inter)',
-                background: catFilter===null&&!advActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                color: catFilter===null&&!advActive ? '#fff' : T.textMuted,
-                transition:'all 150ms',
-              }}>Показать все</button>
-            </div>
           </div>
 
           {/* ── Controls row ── */}
