@@ -708,8 +708,6 @@ export default function HistoryV2Page() {
             ))}
           </div>
 
-          </div>
-
           {/* ── Controls row ── */}
           <div style={{display:'flex',alignItems:'center',gap:12}}>
 
